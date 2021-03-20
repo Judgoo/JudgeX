@@ -1,4 +1,4 @@
-//go:generate go-enum -f=$GOFILE --marshal --nocase --noprefix
+//go:generate ../third-party/go-enum/bin/go-enum -f=$GOFILE --marshal --nocase --noprefix --names
 
 package pkg
 
@@ -6,37 +6,37 @@ import "fmt"
 
 /*
 ENUM(
-	Assembly
-	Bash
-	C
-	Clojure
-	CoffeeScript
-	Cpp
-	Csharp
-	D
-	Elixir
-	Erlang
-	Fsharp
-	Go
-	Groovy
-	Haskell
-	Java
-	JavaScript
-	Julia
-	Kotlin
-	Lua
-	Mercury
-	Nim
-	Ocaml
-	Perl
-	Php
-	Python
-	Raku
-	Ruby
-	Rust
-	Scala
-	Swift
-	TypeScript
+	Assembly asm
+	Bash bash
+	C c
+	Clojure clj
+	CoffeeScript coffee
+	Cpp cpp
+	Csharp cs
+	D d
+	Elixir ex
+	Erlang erl
+	Fsharp fs
+	Go go
+	Groovy groovy
+	Haskell hs
+	Java java Main
+	JavaScript js
+	Julia jl
+	Kotlin kt Main
+	Lua lua
+	Mercury m
+	Nim nim
+	Ocaml ml
+	Perl pl
+	Php php
+	Python py
+	Raku raku
+	Ruby rb
+	Rust rust
+	Scala scala
+	Swift swift
+	TypeScript ts
 )
 */
 type LanguageType int

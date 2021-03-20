@@ -74,39 +74,154 @@ const (
 )
 
 const _LanguageTypeName = "AssemblyBashCClojureCoffeeScriptCppCsharpDElixirErlangFsharpGoGroovyHaskellJavaJavaScriptJuliaKotlinLuaMercuryNimOcamlPerlPhpPythonRakuRubyRustScalaSwiftTypeScript"
+const _LanguageTypeFileName = "main.asmmain.bashmain.cmain.cljmain.coffeemain.cppmain.csmain.dmain.exmain.erlmain.fsmain.gomain.groovymain.hsMain.javamain.jsmain.jlMain.ktmain.luamain.mmain.nimmain.mlmain.plmain.phpmain.pymain.rakumain.rbmain.rustmain.scalamain.swiftmain.ts"
+
+var _LanguageTypeNames = []string{
+	_LanguageTypeName[0:8],
+	_LanguageTypeName[8:12],
+	_LanguageTypeName[12:13],
+	_LanguageTypeName[13:20],
+	_LanguageTypeName[20:32],
+	_LanguageTypeName[32:35],
+	_LanguageTypeName[35:41],
+	_LanguageTypeName[41:42],
+	_LanguageTypeName[42:48],
+	_LanguageTypeName[48:54],
+	_LanguageTypeName[54:60],
+	_LanguageTypeName[60:62],
+	_LanguageTypeName[62:68],
+	_LanguageTypeName[68:75],
+	_LanguageTypeName[75:79],
+	_LanguageTypeName[79:89],
+	_LanguageTypeName[89:94],
+	_LanguageTypeName[94:100],
+	_LanguageTypeName[100:103],
+	_LanguageTypeName[103:110],
+	_LanguageTypeName[110:113],
+	_LanguageTypeName[113:118],
+	_LanguageTypeName[118:122],
+	_LanguageTypeName[122:125],
+	_LanguageTypeName[125:131],
+	_LanguageTypeName[131:135],
+	_LanguageTypeName[135:139],
+	_LanguageTypeName[139:143],
+	_LanguageTypeName[143:148],
+	_LanguageTypeName[148:153],
+	_LanguageTypeName[153:163],
+}
+
+// LanguageTypeNames returns a list of possible string values of LanguageType.
+func LanguageTypeNames() []string {
+	tmp := make([]string, len(_LanguageTypeNames))
+	copy(tmp, _LanguageTypeNames)
+	return tmp
+}
+
+var _LanguageTypeFileNames = []string{
+	_LanguageTypeFileName[0:8],
+	_LanguageTypeFileName[8:17],
+	_LanguageTypeFileName[17:23],
+	_LanguageTypeFileName[23:31],
+	_LanguageTypeFileName[31:42],
+	_LanguageTypeFileName[42:50],
+	_LanguageTypeFileName[50:57],
+	_LanguageTypeFileName[57:63],
+	_LanguageTypeFileName[63:70],
+	_LanguageTypeFileName[70:78],
+	_LanguageTypeFileName[78:85],
+	_LanguageTypeFileName[85:92],
+	_LanguageTypeFileName[92:103],
+	_LanguageTypeFileName[103:110],
+	_LanguageTypeFileName[110:119],
+	_LanguageTypeFileName[119:126],
+	_LanguageTypeFileName[126:133],
+	_LanguageTypeFileName[133:140],
+	_LanguageTypeFileName[140:148],
+	_LanguageTypeFileName[148:154],
+	_LanguageTypeFileName[154:162],
+	_LanguageTypeFileName[162:169],
+	_LanguageTypeFileName[169:176],
+	_LanguageTypeFileName[176:184],
+	_LanguageTypeFileName[184:191],
+	_LanguageTypeFileName[191:200],
+	_LanguageTypeFileName[200:207],
+	_LanguageTypeFileName[207:216],
+	_LanguageTypeFileName[216:226],
+	_LanguageTypeFileName[226:236],
+	_LanguageTypeFileName[236:243],
+}
+
+func LanguageTypeFileNames() []string {
+	tmp := make([]string, len(_LanguageTypeFileNames))
+	copy(tmp, _LanguageTypeFileNames)
+	return tmp
+}
 
 var _LanguageTypeMap = map[LanguageType]string{
-	0:  _LanguageTypeName[0:8],
-	1:  _LanguageTypeName[8:12],
-	2:  _LanguageTypeName[12:13],
-	3:  _LanguageTypeName[13:20],
-	4:  _LanguageTypeName[20:32],
-	5:  _LanguageTypeName[32:35],
-	6:  _LanguageTypeName[35:41],
-	7:  _LanguageTypeName[41:42],
-	8:  _LanguageTypeName[42:48],
-	9:  _LanguageTypeName[48:54],
-	10: _LanguageTypeName[54:60],
-	11: _LanguageTypeName[60:62],
-	12: _LanguageTypeName[62:68],
-	13: _LanguageTypeName[68:75],
-	14: _LanguageTypeName[75:79],
-	15: _LanguageTypeName[79:89],
-	16: _LanguageTypeName[89:94],
-	17: _LanguageTypeName[94:100],
-	18: _LanguageTypeName[100:103],
-	19: _LanguageTypeName[103:110],
-	20: _LanguageTypeName[110:113],
-	21: _LanguageTypeName[113:118],
-	22: _LanguageTypeName[118:122],
-	23: _LanguageTypeName[122:125],
-	24: _LanguageTypeName[125:131],
-	25: _LanguageTypeName[131:135],
-	26: _LanguageTypeName[135:139],
-	27: _LanguageTypeName[139:143],
-	28: _LanguageTypeName[143:148],
-	29: _LanguageTypeName[148:153],
-	30: _LanguageTypeName[153:163],
+	0:  _LanguageTypeFileName[0:8],
+	1:  _LanguageTypeFileName[8:17],
+	2:  _LanguageTypeFileName[17:23],
+	3:  _LanguageTypeFileName[23:31],
+	4:  _LanguageTypeFileName[31:42],
+	5:  _LanguageTypeFileName[42:50],
+	6:  _LanguageTypeFileName[50:57],
+	7:  _LanguageTypeFileName[57:63],
+	8:  _LanguageTypeFileName[63:70],
+	9:  _LanguageTypeFileName[70:78],
+	10: _LanguageTypeFileName[78:85],
+	11: _LanguageTypeFileName[85:92],
+	12: _LanguageTypeFileName[92:103],
+	13: _LanguageTypeFileName[103:110],
+	14: _LanguageTypeFileName[110:119],
+	15: _LanguageTypeFileName[119:126],
+	16: _LanguageTypeFileName[126:133],
+	17: _LanguageTypeFileName[133:140],
+	18: _LanguageTypeFileName[140:148],
+	19: _LanguageTypeFileName[148:154],
+	20: _LanguageTypeFileName[154:162],
+	21: _LanguageTypeFileName[162:169],
+	22: _LanguageTypeFileName[169:176],
+	23: _LanguageTypeFileName[176:184],
+	24: _LanguageTypeFileName[184:191],
+	25: _LanguageTypeFileName[191:200],
+	26: _LanguageTypeFileName[200:207],
+	27: _LanguageTypeFileName[207:216],
+	28: _LanguageTypeFileName[216:226],
+	29: _LanguageTypeFileName[226:236],
+	30: _LanguageTypeFileName[236:243],
+}
+var _LanguageTypeFileNameMap = map[LanguageType]string{
+	0:  _LanguageTypeFileName[0:8],
+	1:  _LanguageTypeFileName[8:17],
+	2:  _LanguageTypeFileName[17:23],
+	3:  _LanguageTypeFileName[23:31],
+	4:  _LanguageTypeFileName[31:42],
+	5:  _LanguageTypeFileName[42:50],
+	6:  _LanguageTypeFileName[50:57],
+	7:  _LanguageTypeFileName[57:63],
+	8:  _LanguageTypeFileName[63:70],
+	9:  _LanguageTypeFileName[70:78],
+	10: _LanguageTypeFileName[78:85],
+	11: _LanguageTypeFileName[85:92],
+	12: _LanguageTypeFileName[92:103],
+	13: _LanguageTypeFileName[103:110],
+	14: _LanguageTypeFileName[110:119],
+	15: _LanguageTypeFileName[119:126],
+	16: _LanguageTypeFileName[126:133],
+	17: _LanguageTypeFileName[133:140],
+	18: _LanguageTypeFileName[140:148],
+	19: _LanguageTypeFileName[148:154],
+	20: _LanguageTypeFileName[154:162],
+	21: _LanguageTypeFileName[162:169],
+	22: _LanguageTypeFileName[169:176],
+	23: _LanguageTypeFileName[176:184],
+	24: _LanguageTypeFileName[184:191],
+	25: _LanguageTypeFileName[191:200],
+	26: _LanguageTypeFileName[200:207],
+	27: _LanguageTypeFileName[207:216],
+	28: _LanguageTypeFileName[216:226],
+	29: _LanguageTypeFileName[226:236],
+	30: _LanguageTypeFileName[236:243],
 }
 
 // String implements the Stringer interface.
@@ -115,6 +230,13 @@ func (x LanguageType) String() string {
 		return str
 	}
 	return fmt.Sprintf("LanguageType(%d)", x)
+}
+
+func (x LanguageType) FileName() string {
+	if str, ok := _LanguageTypeFileNameMap[x]; ok {
+		return str
+	}
+	return "unknown"
 }
 
 var _LanguageTypeValue = map[string]LanguageType{
@@ -191,7 +313,7 @@ func ParseLanguageType(name string) (LanguageType, error) {
 	if x, ok := _LanguageTypeValue[strings.ToLower(name)]; ok {
 		return x, nil
 	}
-	return LanguageType(0), fmt.Errorf("%s is not a valid LanguageType", name)
+	return LanguageType(0), fmt.Errorf("%s is not a valid LanguageType, try [%s]", name, strings.Join(_LanguageTypeNames, ", "))
 }
 
 // MarshalText implements the text marshaller method
