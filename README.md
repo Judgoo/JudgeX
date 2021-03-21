@@ -12,7 +12,7 @@ go mod download
 
 使用 [air](https://github.com/cosmtrek/air) 进行调试。
 
-安装好之后直接当前目录执行 `air` 就能调试了。
+安装好之后直接当前目录执行 `air -c .air.toml` 就能调试了。
 
 ## 自动生成代码
 

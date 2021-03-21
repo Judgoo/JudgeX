@@ -1,23 +1,19 @@
 package pkg
 
-type Error struct {
-	Status  int    `json:"status"`
-	Code    string `json:"code"`
-	Message string `json:"message"`
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
+)
+
+func ApiAbort(c *fiber.Ctx, code int, message string, data interface{}) error {
+	if message == "" {
+		if desp := utils.StatusMessage(code); desp != "" {
+			message = desp
+		}
+	}
+	return c.Status(code).JSON(Response{Code: code, Message: message, Data: &data})
 }
 
-func (e *Error) Error() string {
-	return e.Message
-}
-
-func EntityNotFound(m string) *Error {
-	return &Error{Status: 404, Code: "entity-not-found", Message: m}
-}
-
-func BadRequest(m string) *Error {
-	return &Error{Status: 400, Code: "bad-request", Message: m}
-}
-
-func Unexpected(m string) *Error {
-	return &Error{Status: 500, Code: "internal-server", Message: m}
+func ApiAbortWithoutData(c *fiber.Ctx, code int, message string) error {
+	return ApiAbort(c, code, message, nil)
 }

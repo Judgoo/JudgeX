@@ -2,6 +2,7 @@ package server
 
 import (
 	"JudgeX/pkg"
+	xUtils "JudgeX/utils"
 	"fmt"
 	"os"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/etag"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
@@ -24,27 +24,32 @@ func setupMiddlewares(app *fiber.App) {
 		Level: compress.LevelBestSpeed, // 1
 	}))
 	app.Use(etag.New())
-	app.Use(limiter.New())
 	app.Use(logger.New())
 	app.Use(requestid.New())
+}
+
+func registerBuiltinRoutes(app *fiber.App) {
+	app.Get("/stack", func(c *fiber.Ctx) error {
+		return c.JSON(c.App().Stack())
+	})
 }
 
 func Create() *fiber.App {
 	app := fiber.New(fiber.Config{
 		Prefork:      false,
 		ServerHeader: "JudgeX 0.0.1",
-		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
-			if e, ok := err.(*pkg.Error); ok {
-				return ctx.Status(e.Status).JSON(e)
-			} else if e, ok := err.(*fiber.Error); ok {
-				return ctx.Status(e.Code).JSON(pkg.Error{Status: e.Code, Code: "internal-server", Message: e.Message})
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			if e, ok := err.(*fiber.Error); ok {
+				return pkg.ApiAbort(c, e.Code, e.Message, e.Error())
 			} else {
-				return ctx.Status(500).JSON(pkg.Error{Status: 500, Code: "internal-server", Message: err.Error()})
+				return pkg.ApiAbortWithoutData(c, 500, err.Error())
 			}
 		},
+		JSONEncoder: xUtils.JSONMarshal,
 	})
 
 	setupMiddlewares(app)
+	registerBuiltinRoutes(app)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		// TODO render server info
@@ -55,13 +60,20 @@ func Create() *fiber.App {
 }
 
 func Listen(app *fiber.App) error {
-	// 404 Handler
+	// add a middleware function at the very bottom of the stack
+	// (below all other functions) to handle a 404 response:
 	app.Use(func(c *fiber.Ctx) error {
 		return c.SendStatus(404)
 	})
 
-	serverHost := os.Getenv("SERVER_HOST")
-	serverPort := os.Getenv("SERVER_PORT")
+	serverHost, ok1 := os.LookupEnv("SERVER_HOST")
+	if !ok1 {
+		serverHost = "0.0.0.0"
+	}
+	serverPort, ok2 := os.LookupEnv("SERVER_PORT")
+	if !ok2 {
+		serverPort = "3000"
+	}
 
 	return app.Listen(fmt.Sprintf("%s:%s", serverHost, serverPort))
 }

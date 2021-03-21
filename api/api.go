@@ -8,7 +8,7 @@ import (
 
 func Setup(app *fiber.App) {
 	v1Route := app.Group("/v1", func(c *fiber.Ctx) error {
-		c.Set("X-Api-Version", "v1")
+		c.Set("X-Judge-Version", "v1")
 		return c.Next()
 	})
 	v1.Routes(v1Route)
