@@ -1,10 +1,8 @@
-//go:generate ../third-party/go-enum/bin/go-enum -f=$GOFILE --marshal --nocase --noprefix --names
+//go:generate go run ./generate
 
-package pkg
+package languages
 
-import (
-	"fmt"
-)
+import "fmt"
 
 /*
 ENUM(

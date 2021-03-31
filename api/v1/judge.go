@@ -2,6 +2,7 @@ package v1
 
 import (
 	"JudgeX/api/v1/entities"
+	"JudgeX/languages"
 	pkg "JudgeX/pkg"
 	xUtils "JudgeX/utils"
 	"encoding/hex"
@@ -21,7 +22,7 @@ import (
 )
 
 type LanguageInfo struct {
-	Language pkg.LanguageType
+	Language languages.LanguageType
 	Version  string
 }
 
@@ -159,7 +160,7 @@ func doJudge(c *fiber.Ctx, data entities.JudgePostData, languageInfo LanguageInf
 func judgeLanguageByVersion(c *fiber.Ctx) error {
 	language := utils.CopyString(c.Params("language"))
 	version := utils.CopyString(c.Params("version", "latest"))
-	languageEnum, err := pkg.ParseLanguageType(language)
+	languageEnum, err := languages.ParseLanguageType(language)
 	languageInfo := LanguageInfo{Language: languageEnum, Version: version}
 	if err != nil {
 		return pkg.ApiAbortWithoutData(c, fiber.StatusBadRequest, err.Error())

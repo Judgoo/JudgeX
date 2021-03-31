@@ -9,6 +9,6 @@ func Routes(route fiber.Router) {
 		return c.SendString("Hello from JudgeX.")
 	})
 
-	route.Get("/languages", languages)
+	route.Get("/languages", GetLanguages)
 	route.Post("/judge/:language/:version?", judgeLanguageByVersion)
 }

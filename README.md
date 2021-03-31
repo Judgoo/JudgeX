@@ -16,7 +16,7 @@ go mod download
 
 ## 判题语言支持
 
-所有支持的判题语言写在了 `./pkg/languages.go` 中：
+所有支持的判题语言写在了 `./languages/languages.go` 中：
 
 ```go
 /* ENUM(
@@ -26,7 +26,7 @@ go mod download
 type LanguageType int
 ```
 
-需要增加的语言项按照这样写好，然后代码生成工具会帮我们生成具体的枚举类型和相关转换方法到 `./pkg/languages_enum.go` 这个文件。
+需要增加的语言项按照这样写好，然后代码生成工具会帮我们生成具体的枚举类型和相关转换方法到 `./languages/languages_impl.go` 这个文件。
 
 如果需要增加语言项的话按格式添加到 ENUM 的括号中即可：
 
@@ -37,7 +37,7 @@ ENUM(
 )
 ```
 
-然后代码生成工具就会帮我们生成 `./pkg/languages_enum.go` 里面的内容。
+然后代码生成工具就会帮我们生成 `./languages/languages_impl.go` 里面的内容。
 
 这个文件的作用如下：
 
@@ -46,19 +46,9 @@ ENUM(
 2. 方便的标记每个文件的文件名  
    因为不同的语言的代码文件的后缀不同，而且 Java, Kotlin 等语言还需要文件名首字母大写。所以一起在 `languages.go` 中枚举出来，后面可以直接用。
 
-### 生成 `languages_enum` 文件
+### 生成 `languages_impl` 文件
 
-首先要安装我们魔改的 `go-enum`，帮我们生成这个文件。
-
-```sh
-mkdir -p ./third-party
-git clone https://github.com/Judgoo/go-enum ./third-party/go-enum
-cd ./third-party/go-enum && make build
-```
-
-然后想要生成的时候就在根目录下执行 `go generate ./pkg` 即可。
-
-修改了 `go-enum` 的代码之后得重新 build `go-enum`，然后重新生成我们的代码。
+然后想要生成的时候就在根目录下执行 `go generate ./languages` 即可。
 
 ## 注意事项
 

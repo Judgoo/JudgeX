@@ -1,0 +1,177 @@
+Unknown:
+  ext: txt
+  filestem: main
+  output: a.out
+
+Assembly:
+  ext: asm
+  build:
+    - nasm -f elf64 -o a.o {{.FILE}}
+    - ld -o {{.OUTPUT}} a.o
+  run:
+    - ./{{.OUTPUT}}
+
+Bash:
+  ext: bash
+  run:
+    - bash {{.FILE}}
+
+C:
+  ext: c
+  build:
+    - gcc -lm -w -O3 -std=gnu17 {{.FILE}} -o {{.OUTPUT}}
+  run:
+    - ./{{.OUTPUT}}
+
+Clojure:
+  ext: clj
+  run:
+    - clj -M {{.FILE}}
+
+CoffeeScript:
+  ext: coffee
+  run:
+    - coffee {{.FILE}}
+
+Cpp:
+  ext: cpp
+  build:
+    - g++ -lm -w -O3 -std=gnu++17 {{.FILE}} -o {{.OUTPUT}}
+  run:
+    - ./{{.OUTPUT}}
+
+CSharp:
+  ext: cs
+  build:
+    - mcs -out:a.exe {{.FILE}}
+  run:
+    - mono a.exe
+
+D:
+  ext: d
+  build:
+    - dmd -of={{.OUTPUT}} {{.FILE}}
+  run:
+    - ./{{.OUTPUT}}
+
+Elixir:
+  ext: ex
+  run:
+    - elixirc {{.FILE}}
+
+Go:
+  ext: go
+  build:
+    - go build -o {{.OUTPUT}} {{.FILE}}
+  run:
+    - ./{{.OUTPUT}}
+
+Groovy:
+  ext: groovy
+  run:
+    - groovy {{.FILE}}
+
+Haskell:
+  ext: hs
+  run:
+    - runghc {{.FILE}}
+
+Java:
+  ext: java
+  mco: true
+  filestem: Main
+  build:
+    - javac {{.FILE}}
+  run:
+    - java {{.FILESTEM}}
+
+JavaScript:
+  ext: js
+  mco: true
+  run:
+    - node {{.FILE}}
+
+Julia:
+  ext: jl
+  run:
+    - julia {{.FILE}}
+
+Kotlin:
+  ext: kt
+  filestem: Main
+  build:
+    - kotlinc {{.FILE}}
+  run:
+    - kotlin {{.FILESTEM}}Kt
+
+Lua:
+  ext: lua
+  run:
+    - lua {{.FILE}}
+
+Nim:
+  ext: nim
+  run:
+    - nim --hints:off --verbosity:0 compile --run {{.FILE}}
+
+Ocaml:
+  ext: ml
+  build:
+    - ocamlc -o {{.OUTPUT}} {{.FILE}}
+  run:
+    - ./{{.OUTPUT}}
+
+Perl:
+  ext: pl
+  run:
+    - perl {{.FILE}}
+
+Php:
+  ext: php
+  run:
+    - php {{.FILE}}
+
+Python:
+  ext: py
+  mco: true
+  run:
+    - python {{.FILE}}
+
+Raku:
+  ext: raku
+  run:
+    - raku {{.FILE}}
+
+Ruby:
+  ext: rb
+  run:
+    - ruby {{.FILE}}
+
+Rust:
+  ext: rust
+  build:
+    - rustc -o {{.OUTPUT}} {{.FILE}}
+  run:
+    - ./{{.OUTPUT}}
+
+Scala:
+  ext: scala
+  build:
+    - scalac {{.FILE}}
+  run:
+    - scala Main
+
+Swift:
+  ext: swift
+  build:
+    - swiftc -o {{.OUTPUT}} {{.FILE}}
+  run:
+    - ./{{.OUTPUT}}
+
+TypeScript:
+  ext: ts
+  mco: true
+  build:
+    - tsc -out a.js {{.FILE}}
+  run:
+    - node a.js
