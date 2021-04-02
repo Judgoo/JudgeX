@@ -1,177 +1,212 @@
-Unknown:
-  ext: txt
+# 以下是可用的 template 字符串：
+# - Output
+# - Filestem
+# - Filename
+#     == Filestem + Ext
+
+Unknown: &default
   filestem: main
+  ext: "txt"
   output: a.out
+  mco: false
 
 Assembly:
+  <<: *default
   ext: asm
   build:
-    - nasm -f elf64 -o a.o {{.FILE}}
-    - ld -o {{.OUTPUT}} a.o
+    - nasm -f elf64 -o a.o {{.Filename}}
+    - ld -o {{.Output}} a.o
   run:
-    - ./{{.OUTPUT}}
+    - ./{{.Output}}
 
 Bash:
+  <<: *default
   ext: bash
   run:
-    - bash {{.FILE}}
+    - bash {{.Filename}}
 
 C:
+  <<: *default
   ext: c
   build:
-    - gcc -lm -w -O3 -std=gnu17 {{.FILE}} -o {{.OUTPUT}}
+    - gcc -lm -w -O3 -std=gnu17 {{.Filename}} -o {{.Output}}
   run:
-    - ./{{.OUTPUT}}
+    - ./{{.Output}}
 
 Clojure:
+  <<: *default
   ext: clj
   run:
-    - clj -M {{.FILE}}
+    - clj -M {{.Filename}}
 
 CoffeeScript:
+  <<: *default
   ext: coffee
   run:
-    - coffee {{.FILE}}
+    - coffee {{.Filename}}
 
 Cpp:
+  <<: *default
   ext: cpp
   build:
-    - g++ -lm -w -O3 -std=gnu++17 {{.FILE}} -o {{.OUTPUT}}
+    - g++ -lm -w -O3 -std=gnu++17 {{.Filename}} -o {{.Output}}
   run:
-    - ./{{.OUTPUT}}
+    - ./{{.Output}}
 
 CSharp:
+  <<: *default
   ext: cs
   build:
-    - mcs -out:a.exe {{.FILE}}
+    - mcs -out:a.exe {{.Filename}}
   run:
     - mono a.exe
 
 D:
+  <<: *default
   ext: d
   build:
-    - dmd -of={{.OUTPUT}} {{.FILE}}
+    - dmd -of={{.Output}} {{.Filename}}
   run:
-    - ./{{.OUTPUT}}
+    - ./{{.Output}}
 
 Elixir:
+  <<: *default
   ext: ex
   run:
-    - elixirc {{.FILE}}
+    - elixirc {{.Filename}}
 
 Go:
+  <<: *default
   ext: go
   build:
-    - go build -o {{.OUTPUT}} {{.FILE}}
+    - go build -o {{.Output}} {{.Filename}}
   run:
-    - ./{{.OUTPUT}}
+    - ./{{.Output}}
 
 Groovy:
+  <<: *default
   ext: groovy
   run:
-    - groovy {{.FILE}}
+    - groovy {{.Filename}}
 
 Haskell:
+  <<: *default
   ext: hs
   run:
-    - runghc {{.FILE}}
+    - runghc {{.Filename}}
 
 Java:
+  <<: *default
   ext: java
   mco: true
   filestem: Main
   build:
-    - javac {{.FILE}}
+    - javac {{.Filename}}
   run:
-    - java {{.FILESTEM}}
+    - java {{.Filestem}}
 
 JavaScript:
+  <<: *default
   ext: js
   mco: true
   run:
-    - node {{.FILE}}
+    - node {{.Filename}}
 
 Julia:
+  <<: *default
   ext: jl
   run:
-    - julia {{.FILE}}
+    - julia {{.Filename}}
 
 Kotlin:
+  <<: *default
   ext: kt
   filestem: Main
   build:
-    - kotlinc {{.FILE}}
+    - kotlinc {{.Filename}}
   run:
-    - kotlin {{.FILESTEM}}Kt
+    - kotlin {{.Filestem}}Kt
 
 Lua:
+  <<: *default
   ext: lua
   run:
-    - lua {{.FILE}}
+    - lua {{.Filename}}
 
 Nim:
+  <<: *default
   ext: nim
   run:
-    - nim --hints:off --verbosity:0 compile --run {{.FILE}}
+    - nim --hints:off --verbosity:0 compile --run {{.Filename}}
 
 Ocaml:
+  <<: *default
   ext: ml
   build:
-    - ocamlc -o {{.OUTPUT}} {{.FILE}}
+    - ocamlc -o {{.Output}} {{.Filename}}
   run:
-    - ./{{.OUTPUT}}
+    - ./{{.Output}}
 
 Perl:
+  <<: *default
   ext: pl
   run:
-    - perl {{.FILE}}
+    - perl {{.Filename}}
 
 Php:
+  <<: *default
   ext: php
   run:
-    - php {{.FILE}}
+    - php {{.Filename}}
 
 Python:
+  <<: *default
   ext: py
   mco: true
   run:
-    - python {{.FILE}}
+    - python {{.Filename}}
 
 Raku:
+  <<: *default
   ext: raku
   run:
-    - raku {{.FILE}}
+    - raku {{.Filename}}
 
 Ruby:
+  <<: *default
   ext: rb
   run:
-    - ruby {{.FILE}}
+    - ruby {{.Filename}}
 
 Rust:
-  ext: rust
+  <<: *default
+  ext: rs
   build:
-    - rustc -o {{.OUTPUT}} {{.FILE}}
+    - rustc -o {{.Output}} {{.Filename}}
   run:
-    - ./{{.OUTPUT}}
+    - ./{{.Output}}
 
 Scala:
+  <<: *default
   ext: scala
   build:
-    - scalac {{.FILE}}
+    - scalac {{.Filename}}
   run:
     - scala Main
 
 Swift:
+  <<: *default
   ext: swift
   build:
-    - swiftc -o {{.OUTPUT}} {{.FILE}}
+    - swiftc -o {{.Output}} {{.Filename}}
   run:
-    - ./{{.OUTPUT}}
+    - ./{{.Output}}
 
 TypeScript:
+  <<: *default
   ext: ts
   mco: true
   build:
-    - tsc -out a.js {{.FILE}}
+    - tsc -out a.js {{.Filename}}
   run:
     - node a.js

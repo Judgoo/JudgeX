@@ -7,9 +7,7 @@ import (
 // Stringify returns a string that is all of the enum value names concatenated without a separator
 func StringifyRawName(e Enum) (ret string, err error) {
 	for _, val := range e.Values {
-		if val.Name != skipHolder {
-			ret = ret + val.RawName
-		}
+		ret = ret + val.RawName
 	}
 	return
 }
@@ -17,9 +15,7 @@ func StringifyRawName(e Enum) (ret string, err error) {
 // Stringify returns a string that is all of the enum value names concatenated without a separator
 func StringifyFileName(e Enum) (ret string, err error) {
 	for _, val := range e.Values {
-		if val.Name != skipHolder {
-			ret = ret + val.FileName
-		}
+		ret = ret + val.Profile.Filename
 	}
 	return
 }
@@ -30,11 +26,9 @@ func MapifyFileName(e Enum) (ret string, err error) {
 	ret = fmt.Sprintf("map[%s]string{\n", e.Name)
 	index := 0
 	for _, val := range e.Values {
-		if val.FileName != skipHolder {
-			nextIndex := index + len(val.FileName)
-			ret = fmt.Sprintf("%s%d: %s[%d:%d],\n", ret, val.Value, strName, index, nextIndex)
-			index = nextIndex
-		}
+		nextIndex := index + len(val.Profile.Filename)
+		ret = fmt.Sprintf("%s%d: %s[%d:%d],\n", ret, val.Value, strName, index, nextIndex)
+		index = nextIndex
 	}
 	ret = ret + `}`
 	return
@@ -46,11 +40,9 @@ func Mapify(e Enum) (ret string, err error) {
 	ret = fmt.Sprintf("map[%s]string{\n", e.Name)
 	index := 0
 	for _, val := range e.Values {
-		if val.Name != skipHolder {
-			nextIndex := index + len(val.Name)
-			ret = fmt.Sprintf("%s%d: %s[%d:%d],\n", ret, val.Value, strName, index, nextIndex)
-			index = nextIndex
-		}
+		nextIndex := index + len(val.Name)
+		ret = fmt.Sprintf("%s%d: %s[%d:%d],\n", ret, val.Value, strName, index, nextIndex)
+		index = nextIndex
 	}
 	ret = ret + `}`
 	return
@@ -62,14 +54,12 @@ func Unmapify(e Enum, lowercase bool) (ret string, err error) {
 	ret = fmt.Sprintf("map[string]%s{\n", e.Name)
 	index := 0
 	for _, val := range e.Values {
-		if val.Name != skipHolder {
-			nextIndex := index + len(val.Name)
-			ret = fmt.Sprintf("%s%s[%d:%d]: %d,\n", ret, strName, index, nextIndex, val.Value)
-			if lowercase {
-				ret = fmt.Sprintf("%sstrings.ToLower(%s[%d:%d]): %d,\n", ret, strName, index, nextIndex, val.Value)
-			}
-			index = nextIndex
+		nextIndex := index + len(val.Name)
+		ret = fmt.Sprintf("%s%s[%d:%d]: %d,\n", ret, strName, index, nextIndex, val.Value)
+		if lowercase {
+			ret = fmt.Sprintf("%sstrings.ToLower(%s[%d:%d]): %d,\n", ret, strName, index, nextIndex, val.Value)
 		}
+		index = nextIndex
 	}
 	ret = ret + `}`
 	return
@@ -81,11 +71,9 @@ func Namify(e Enum) (ret string, err error) {
 	ret = "[]string{\n"
 	index := 0
 	for _, val := range e.Values {
-		if val.Name != skipHolder {
-			nextIndex := index + len(val.Name)
-			ret = fmt.Sprintf("%s%s[%d:%d],\n", ret, strName, index, nextIndex)
-			index = nextIndex
-		}
+		nextIndex := index + len(val.Name)
+		ret = fmt.Sprintf("%s%s[%d:%d],\n", ret, strName, index, nextIndex)
+		index = nextIndex
 	}
 	ret = ret + "}"
 	return
@@ -97,11 +85,9 @@ func NamifyFileNames(e Enum) (ret string, err error) {
 	ret = "[]string{\n"
 	index := 0
 	for _, val := range e.Values {
-		if val.FileName != skipHolder {
-			nextIndex := index + len(val.FileName)
-			ret = fmt.Sprintf("%s%s[%d:%d],\n", ret, strName, index, nextIndex)
-			index = nextIndex
-		}
+		nextIndex := index + len(val.Profile.Filename)
+		ret = fmt.Sprintf("%s%s[%d:%d],\n", ret, strName, index, nextIndex)
+		index = nextIndex
 	}
 	ret = ret + "}"
 	return

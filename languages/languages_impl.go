@@ -9,75 +9,77 @@ import (
 )
 
 const (
-	// Assembly is a LanguageType of type Assembly.
+	// a LanguageType of type Assembly.
 	Assembly LanguageType = iota
-	// Bash is a LanguageType of type Bash.
+	// a LanguageType of type Bash.
 	Bash
-	// C is a LanguageType of type C.
+	// a LanguageType of type C.
 	C
-	// Clojure is a LanguageType of type Clojure.
-	Clojure
-	// CoffeeScript is a LanguageType of type CoffeeScript.
-	CoffeeScript
-	// Cpp is a LanguageType of type Cpp.
-	Cpp
-	// CSharp is a LanguageType of type CSharp.
+	// a LanguageType of type CSharp.
 	CSharp
-	// D is a LanguageType of type D.
+	// a LanguageType of type Clojure.
+	Clojure
+	// a LanguageType of type CoffeeScript.
+	CoffeeScript
+	// a LanguageType of type Cpp.
+	Cpp
+	// a LanguageType of type D.
 	D
-	// Elixir is a LanguageType of type Elixir.
+	// a LanguageType of type Elixir.
 	Elixir
-	// Go is a LanguageType of type Go.
+	// a LanguageType of type Go.
 	Go
-	// Groovy is a LanguageType of type Groovy.
+	// a LanguageType of type Groovy.
 	Groovy
-	// Haskell is a LanguageType of type Haskell.
+	// a LanguageType of type Haskell.
 	Haskell
-	// Java is a LanguageType of type Java.
+	// a LanguageType of type Java.
 	Java
-	// JavaScript is a LanguageType of type JavaScript.
+	// a LanguageType of type JavaScript.
 	JavaScript
-	// Julia is a LanguageType of type Julia.
+	// a LanguageType of type Julia.
 	Julia
-	// Kotlin is a LanguageType of type Kotlin.
+	// a LanguageType of type Kotlin.
 	Kotlin
-	// Lua is a LanguageType of type Lua.
+	// a LanguageType of type Lua.
 	Lua
-	// Nim is a LanguageType of type Nim.
+	// a LanguageType of type Nim.
 	Nim
-	// Ocaml is a LanguageType of type Ocaml.
+	// a LanguageType of type Ocaml.
 	Ocaml
-	// Perl is a LanguageType of type Perl.
+	// a LanguageType of type Perl.
 	Perl
-	// Php is a LanguageType of type Php.
+	// a LanguageType of type Php.
 	Php
-	// Python is a LanguageType of type Python.
+	// a LanguageType of type Python.
 	Python
-	// Raku is a LanguageType of type Raku.
+	// a LanguageType of type Raku.
 	Raku
-	// Ruby is a LanguageType of type Ruby.
+	// a LanguageType of type Ruby.
 	Ruby
-	// Rust is a LanguageType of type Rust.
+	// a LanguageType of type Rust.
 	Rust
-	// Scala is a LanguageType of type Scala.
+	// a LanguageType of type Scala.
 	Scala
-	// Swift is a LanguageType of type Swift.
+	// a LanguageType of type Swift.
 	Swift
-	// TypeScript is a LanguageType of type TypeScript.
+	// a LanguageType of type TypeScript.
 	TypeScript
+	// a LanguageType of type Unknown.
+	Unknown
 )
 
-const _LanguageTypeName = "AssemblyBashCClojureCoffeeScriptCppCSharpDElixirGoGroovyHaskellJavaJavaScriptJuliaKotlinLuaNimOcamlPerlPhpPythonRakuRubyRustScalaSwiftTypeScript"
-const _LanguageTypeFileName = "main.asmmain.bashmain.cmain.cljmain.coffeemain.cppmain.csmain.dmain.exmain.gomain.groovymain.hsMain.javamain.jsmain.jlMain.ktmain.luamain.nimmain.mlmain.plmain.phpmain.pymain.rakumain.rbmain.rustmain.scalamain.swiftmain.ts"
+const _LanguageTypeName = "AssemblyBashCCSharpClojureCoffeeScriptCppDElixirGoGroovyHaskellJavaJavaScriptJuliaKotlinLuaNimOcamlPerlPhpPythonRakuRubyRustScalaSwiftTypeScriptUnknown"
+const _LanguageTypeFileName = "main.asmmain.bashmain.cmain.csmain.cljmain.coffeemain.cppmain.dmain.exmain.gomain.groovymain.hsMain.javamain.jsmain.jlMain.ktmain.luamain.nimmain.mlmain.plmain.phpmain.pymain.rakumain.rbmain.rsmain.scalamain.swiftmain.tsmain.txt"
 
 var _LanguageTypeNames = []string{
 	_LanguageTypeName[0:8],
 	_LanguageTypeName[8:12],
 	_LanguageTypeName[12:13],
-	_LanguageTypeName[13:20],
-	_LanguageTypeName[20:32],
-	_LanguageTypeName[32:35],
-	_LanguageTypeName[35:41],
+	_LanguageTypeName[13:19],
+	_LanguageTypeName[19:26],
+	_LanguageTypeName[26:38],
+	_LanguageTypeName[38:41],
 	_LanguageTypeName[41:42],
 	_LanguageTypeName[42:48],
 	_LanguageTypeName[48:50],
@@ -99,6 +101,7 @@ var _LanguageTypeNames = []string{
 	_LanguageTypeName[124:129],
 	_LanguageTypeName[129:134],
 	_LanguageTypeName[134:144],
+	_LanguageTypeName[144:151],
 }
 
 // LanguageTypeNames returns a list of possible string values of LanguageType.
@@ -112,10 +115,10 @@ var _LanguageTypeFileNames = []string{
 	_LanguageTypeFileName[0:8],
 	_LanguageTypeFileName[8:17],
 	_LanguageTypeFileName[17:23],
-	_LanguageTypeFileName[23:31],
-	_LanguageTypeFileName[31:42],
-	_LanguageTypeFileName[42:50],
-	_LanguageTypeFileName[50:57],
+	_LanguageTypeFileName[23:30],
+	_LanguageTypeFileName[30:38],
+	_LanguageTypeFileName[38:49],
+	_LanguageTypeFileName[49:57],
 	_LanguageTypeFileName[57:63],
 	_LanguageTypeFileName[63:70],
 	_LanguageTypeFileName[70:77],
@@ -133,10 +136,11 @@ var _LanguageTypeFileNames = []string{
 	_LanguageTypeFileName[163:170],
 	_LanguageTypeFileName[170:179],
 	_LanguageTypeFileName[179:186],
-	_LanguageTypeFileName[186:195],
-	_LanguageTypeFileName[195:205],
-	_LanguageTypeFileName[205:215],
-	_LanguageTypeFileName[215:222],
+	_LanguageTypeFileName[186:193],
+	_LanguageTypeFileName[193:203],
+	_LanguageTypeFileName[203:213],
+	_LanguageTypeFileName[213:220],
+	_LanguageTypeFileName[220:228],
 }
 
 func LanguageTypeFileNames() []string {
@@ -149,10 +153,10 @@ var _LanguageTypeMap = map[LanguageType]string{
 	0:  _LanguageTypeName[0:8],
 	1:  _LanguageTypeName[8:12],
 	2:  _LanguageTypeName[12:13],
-	3:  _LanguageTypeName[13:20],
-	4:  _LanguageTypeName[20:32],
-	5:  _LanguageTypeName[32:35],
-	6:  _LanguageTypeName[35:41],
+	3:  _LanguageTypeName[13:19],
+	4:  _LanguageTypeName[19:26],
+	5:  _LanguageTypeName[26:38],
+	6:  _LanguageTypeName[38:41],
 	7:  _LanguageTypeName[41:42],
 	8:  _LanguageTypeName[42:48],
 	9:  _LanguageTypeName[48:50],
@@ -174,15 +178,16 @@ var _LanguageTypeMap = map[LanguageType]string{
 	25: _LanguageTypeName[124:129],
 	26: _LanguageTypeName[129:134],
 	27: _LanguageTypeName[134:144],
+	28: _LanguageTypeName[144:151],
 }
 var _LanguageTypeFileNameMap = map[LanguageType]string{
 	0:  _LanguageTypeFileName[0:8],
 	1:  _LanguageTypeFileName[8:17],
 	2:  _LanguageTypeFileName[17:23],
-	3:  _LanguageTypeFileName[23:31],
-	4:  _LanguageTypeFileName[31:42],
-	5:  _LanguageTypeFileName[42:50],
-	6:  _LanguageTypeFileName[50:57],
+	3:  _LanguageTypeFileName[23:30],
+	4:  _LanguageTypeFileName[30:38],
+	5:  _LanguageTypeFileName[38:49],
+	6:  _LanguageTypeFileName[49:57],
 	7:  _LanguageTypeFileName[57:63],
 	8:  _LanguageTypeFileName[63:70],
 	9:  _LanguageTypeFileName[70:77],
@@ -200,10 +205,11 @@ var _LanguageTypeFileNameMap = map[LanguageType]string{
 	21: _LanguageTypeFileName[163:170],
 	22: _LanguageTypeFileName[170:179],
 	23: _LanguageTypeFileName[179:186],
-	24: _LanguageTypeFileName[186:195],
-	25: _LanguageTypeFileName[195:205],
-	26: _LanguageTypeFileName[205:215],
-	27: _LanguageTypeFileName[215:222],
+	24: _LanguageTypeFileName[186:193],
+	25: _LanguageTypeFileName[193:203],
+	26: _LanguageTypeFileName[203:213],
+	27: _LanguageTypeFileName[213:220],
+	28: _LanguageTypeFileName[220:228],
 }
 
 // String implements the Stringer interface.
@@ -228,14 +234,14 @@ var _LanguageTypeValue = map[string]LanguageType{
 	strings.ToLower(_LanguageTypeName[8:12]):    1,
 	_LanguageTypeName[12:13]:                    2,
 	strings.ToLower(_LanguageTypeName[12:13]):   2,
-	_LanguageTypeName[13:20]:                    3,
-	strings.ToLower(_LanguageTypeName[13:20]):   3,
-	_LanguageTypeName[20:32]:                    4,
-	strings.ToLower(_LanguageTypeName[20:32]):   4,
-	_LanguageTypeName[32:35]:                    5,
-	strings.ToLower(_LanguageTypeName[32:35]):   5,
-	_LanguageTypeName[35:41]:                    6,
-	strings.ToLower(_LanguageTypeName[35:41]):   6,
+	_LanguageTypeName[13:19]:                    3,
+	strings.ToLower(_LanguageTypeName[13:19]):   3,
+	_LanguageTypeName[19:26]:                    4,
+	strings.ToLower(_LanguageTypeName[19:26]):   4,
+	_LanguageTypeName[26:38]:                    5,
+	strings.ToLower(_LanguageTypeName[26:38]):   5,
+	_LanguageTypeName[38:41]:                    6,
+	strings.ToLower(_LanguageTypeName[38:41]):   6,
 	_LanguageTypeName[41:42]:                    7,
 	strings.ToLower(_LanguageTypeName[41:42]):   7,
 	_LanguageTypeName[42:48]:                    8,
@@ -278,6 +284,8 @@ var _LanguageTypeValue = map[string]LanguageType{
 	strings.ToLower(_LanguageTypeName[129:134]): 26,
 	_LanguageTypeName[134:144]:                  27,
 	strings.ToLower(_LanguageTypeName[134:144]): 27,
+	_LanguageTypeName[144:151]:                  28,
+	strings.ToLower(_LanguageTypeName[144:151]): 28,
 }
 
 // ParseLanguageType attempts to convert a string to a LanguageType
