@@ -60,7 +60,6 @@ func (x *{{.enum.Name}}) UnmarshalText(text []byte) error {
 
 {{- define "stringer"}}
 const _{{.enum.Name}}Name = "{{ stringifyRawName .enum }}"
-const _{{.enum.Name}}FileName = "{{ stringifyFileName .enum }}"
 
 {{ if .names }}var _{{.enum.Name}}Names = {{namify .enum}}
 
@@ -72,16 +71,7 @@ func {{.enum.Name}}Names() []string {
 }
 {{ end -}}
 
-var _{{.enum.Name}}FileNames = {{namifyFileNames .enum}}
-
-func {{.enum.Name}}FileNames() []string {
-	tmp := make([]string, len(_{{.enum.Name}}FileNames))
-	copy(tmp, _{{.enum.Name}}FileNames)
-	return tmp
-}
-
 var _{{.enum.Name}}Map = {{ mapify .enum }}
-var _{{.enum.Name}}FileNameMap = {{ mapifyFileName .enum }}
 
 // String implements the Stringer interface.
 func (x {{.enum.Name}}) String() string {
@@ -90,14 +80,6 @@ func (x {{.enum.Name}}) String() string {
 	}
 	return fmt.Sprintf("{{.enum.Name}}(%d)", x)
 }
-
-func (x {{.enum.Name}}) FileName() string {
-	if str, ok := _{{.enum.Name}}FileNameMap[x]; ok {
-		return str
-	}
-	return "unknown"
-}
-
 
 var _{{.enum.Name}}Value = {{ unmapify .enum .lowercase }}
 

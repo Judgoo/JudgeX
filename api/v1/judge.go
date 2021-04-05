@@ -131,7 +131,7 @@ func doJudge(c *fiber.Ctx, data entities.JudgePostData, languageInfo LanguageInf
 	codeCh := make(chan error)
 	go func() {
 		codeCh <- WriteCode(File{
-			filepath.Join(workPath, languageInfo.Language.FileName()),
+			filepath.Join(workPath, languageInfo.Language.Profile().Filename),
 			data.Code,
 		})
 	}()
@@ -154,7 +154,19 @@ func doJudge(c *fiber.Ctx, data entities.JudgePostData, languageInfo LanguageInf
 		return pkg.ApiAbortWithoutData(c, 400, tdResult.Error.Error())
 
 	}
-	return c.SendString("Hello, World!" + languageInfo.Language.String() + languageInfo.Version)
+	return c.JSON(struct {
+		Data     string
+		Language string
+		Version  string
+		Build    []string
+		Run      []string
+	}{
+		Data:     "Hello, World!",
+		Language: languageInfo.Language.String(),
+		Version:  languageInfo.Version,
+		Build:    languageInfo.Language.Profile().Build,
+		Run:      languageInfo.Language.Profile().Run,
+	})
 }
 
 func judgeLanguageByVersion(c *fiber.Ctx) error {

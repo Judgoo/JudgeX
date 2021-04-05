@@ -11,7 +11,6 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"sort"
 	"strings"
 	"text/template"
 
@@ -91,7 +90,7 @@ func (g *Generator) WithPrefix(prefix string) *Generator {
 	return g
 }
 
-func (g *Generator) GenerateFromProfile(inputFile string, profileMap *languages.LanguageProfileMap) ([]byte, error) {
+func (g *Generator) GenerateFromProfile(inputFile string, keys *[]string, profileMap *languages.LanguageProfileMap) ([]byte, error) {
 	f, err := g.parseFile(inputFile)
 	if err != nil {
 		return nil, fmt.Errorf("generate: error parsing input file '%s': %s", inputFile, err)
@@ -103,36 +102,13 @@ func (g *Generator) GenerateFromProfile(inputFile string, profileMap *languages.
 	if err != nil {
 		return nil, errors.WithMessage(err, "Failed writing header")
 	}
-	keys := make([]string, 0, len(*profileMap))
-	for k := range *profileMap {
-		keys = append(keys, k)
-	}
-	// Make the output more consistent by iterating over sorted keys of map
-	sort.Strings(keys)
 
-	for _, k := range keys {
-		(*profileMap)[k].Filename = (*profileMap)[k].Filestem + "." + (*profileMap)[k].Ext
-		tpl := template.New((*profileMap)[k].Filename)
-
-		for bIdx, buildString := range (*profileMap)[k].Build {
-			var buf bytes.Buffer
-			tmpl, _ := tpl.Parse(buildString)
-			_ = tmpl.Execute(&buf, (*profileMap)[k])
-			(*profileMap)[k].Build[bIdx] = buf.String()
-		}
-
-		for rIdx, runString := range (*profileMap)[k].Run {
-			var buf bytes.Buffer
-			tmpl, _ := tpl.Parse(runString)
-			_ = tmpl.Execute(&buf, (*profileMap)[k])
-			(*profileMap)[k].Run[rIdx] = buf.String()
-		}
-	}
 	// Parse the enum doc statement
-	enum, pErr := g.parseEnum(keys, *profileMap)
+	enum, pErr := g.parseEnum(*keys, *profileMap)
 	if pErr != nil {
 		return []byte{}, pErr
 	}
+
 	data := map[string]interface{}{
 		"enum":      enum,
 		"name":      TargetName,

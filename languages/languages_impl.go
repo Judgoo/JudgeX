@@ -70,7 +70,6 @@ const (
 )
 
 const _LanguageTypeName = "AssemblyBashCCSharpClojureCoffeeScriptCppDElixirGoGroovyHaskellJavaJavaScriptJuliaKotlinLuaNimOcamlPerlPhpPythonRakuRubyRustScalaSwiftTypeScriptUnknown"
-const _LanguageTypeFileName = "main.asmmain.bashmain.cmain.csmain.cljmain.coffeemain.cppmain.dmain.exmain.gomain.groovymain.hsMain.javamain.jsmain.jlMain.ktmain.luamain.nimmain.mlmain.plmain.phpmain.pymain.rakumain.rbmain.rsmain.scalamain.swiftmain.tsmain.txt"
 
 var _LanguageTypeNames = []string{
 	_LanguageTypeName[0:8],
@@ -111,44 +110,6 @@ func LanguageTypeNames() []string {
 	return tmp
 }
 
-var _LanguageTypeFileNames = []string{
-	_LanguageTypeFileName[0:8],
-	_LanguageTypeFileName[8:17],
-	_LanguageTypeFileName[17:23],
-	_LanguageTypeFileName[23:30],
-	_LanguageTypeFileName[30:38],
-	_LanguageTypeFileName[38:49],
-	_LanguageTypeFileName[49:57],
-	_LanguageTypeFileName[57:63],
-	_LanguageTypeFileName[63:70],
-	_LanguageTypeFileName[70:77],
-	_LanguageTypeFileName[77:88],
-	_LanguageTypeFileName[88:95],
-	_LanguageTypeFileName[95:104],
-	_LanguageTypeFileName[104:111],
-	_LanguageTypeFileName[111:118],
-	_LanguageTypeFileName[118:125],
-	_LanguageTypeFileName[125:133],
-	_LanguageTypeFileName[133:141],
-	_LanguageTypeFileName[141:148],
-	_LanguageTypeFileName[148:155],
-	_LanguageTypeFileName[155:163],
-	_LanguageTypeFileName[163:170],
-	_LanguageTypeFileName[170:179],
-	_LanguageTypeFileName[179:186],
-	_LanguageTypeFileName[186:193],
-	_LanguageTypeFileName[193:203],
-	_LanguageTypeFileName[203:213],
-	_LanguageTypeFileName[213:220],
-	_LanguageTypeFileName[220:228],
-}
-
-func LanguageTypeFileNames() []string {
-	tmp := make([]string, len(_LanguageTypeFileNames))
-	copy(tmp, _LanguageTypeFileNames)
-	return tmp
-}
-
 var _LanguageTypeMap = map[LanguageType]string{
 	0:  _LanguageTypeName[0:8],
 	1:  _LanguageTypeName[8:12],
@@ -180,37 +141,6 @@ var _LanguageTypeMap = map[LanguageType]string{
 	27: _LanguageTypeName[134:144],
 	28: _LanguageTypeName[144:151],
 }
-var _LanguageTypeFileNameMap = map[LanguageType]string{
-	0:  _LanguageTypeFileName[0:8],
-	1:  _LanguageTypeFileName[8:17],
-	2:  _LanguageTypeFileName[17:23],
-	3:  _LanguageTypeFileName[23:30],
-	4:  _LanguageTypeFileName[30:38],
-	5:  _LanguageTypeFileName[38:49],
-	6:  _LanguageTypeFileName[49:57],
-	7:  _LanguageTypeFileName[57:63],
-	8:  _LanguageTypeFileName[63:70],
-	9:  _LanguageTypeFileName[70:77],
-	10: _LanguageTypeFileName[77:88],
-	11: _LanguageTypeFileName[88:95],
-	12: _LanguageTypeFileName[95:104],
-	13: _LanguageTypeFileName[104:111],
-	14: _LanguageTypeFileName[111:118],
-	15: _LanguageTypeFileName[118:125],
-	16: _LanguageTypeFileName[125:133],
-	17: _LanguageTypeFileName[133:141],
-	18: _LanguageTypeFileName[141:148],
-	19: _LanguageTypeFileName[148:155],
-	20: _LanguageTypeFileName[155:163],
-	21: _LanguageTypeFileName[163:170],
-	22: _LanguageTypeFileName[170:179],
-	23: _LanguageTypeFileName[179:186],
-	24: _LanguageTypeFileName[186:193],
-	25: _LanguageTypeFileName[193:203],
-	26: _LanguageTypeFileName[203:213],
-	27: _LanguageTypeFileName[213:220],
-	28: _LanguageTypeFileName[220:228],
-}
 
 // String implements the Stringer interface.
 func (x LanguageType) String() string {
@@ -218,13 +148,6 @@ func (x LanguageType) String() string {
 		return str
 	}
 	return fmt.Sprintf("LanguageType(%d)", x)
-}
-
-func (x LanguageType) FileName() string {
-	if str, ok := _LanguageTypeFileNameMap[x]; ok {
-		return str
-	}
-	return "unknown"
 }
 
 var _LanguageTypeValue = map[string]LanguageType{
