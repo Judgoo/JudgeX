@@ -159,7 +159,7 @@ func doJudge(c *fiber.Ctx, data entities.JudgePostData, languageInfo LanguageInf
 		Language string
 		Version  string
 		Build    []string
-		Run      []string
+		Run      string
 	}{
 		Data:     "Hello, World!",
 		Language: languageInfo.Language.String(),

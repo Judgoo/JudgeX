@@ -47,14 +47,11 @@ func main() {
 			_ = tmpl.Execute(buf, (*profileMap[k]))
 			(*profileMap[k]).Build[bIdx] = buf.String()
 		}
-
-		for rIdx, runString := range (*profileMap[k]).Run {
-			tpl := template.New((*profileMap[k]).Filename)
-			buf := new(bytes.Buffer)
-			tmpl, _ := tpl.Parse(runString)
-			_ = tmpl.Execute(buf, (*profileMap[k]))
-			(*profileMap[k]).Run[rIdx] = buf.String()
-		}
+		tpl := template.New((*profileMap[k]).Filename)
+		buf := new(bytes.Buffer)
+		tmpl, _ := tpl.Parse((*profileMap[k]).Run)
+		_ = tmpl.Execute(buf, (*profileMap[k]))
+		(*profileMap[k]).Run = buf.String()
 	}
 
 	marshaledBytes, err := yaml.Marshal(profileMap)

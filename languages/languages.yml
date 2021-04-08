@@ -16,84 +16,72 @@ Assembly:
   build:
     - nasm -f elf64 -o a.o {{.Filename}}
     - ld -o {{.Output}} a.o
-  run:
-    - ./{{.Output}}
+  run: ./{{.Output}}
 
 Bash:
   <<: *default
   ext: bash
-  run:
-    - bash {{.Filename}}
+  run: bash {{.Filename}}
 
 C:
   <<: *default
   ext: c
   build:
     - gcc -lm -w -O3 -std=gnu17 {{.Filename}} -o {{.Output}}
-  run:
-    - ./{{.Output}}
+  run: ./{{.Output}}
 
 Clojure:
   <<: *default
   ext: clj
-  run:
-    - clj -M {{.Filename}}
+  run: clj -M {{.Filename}}
 
 CoffeeScript:
   <<: *default
   ext: coffee
-  run:
-    - coffee {{.Filename}}
+  run: coffee {{.Filename}}
 
 Cpp:
   <<: *default
   ext: cpp
   build:
     - g++ -lm -w -O3 -std=gnu++17 {{.Filename}} -o {{.Output}}
-  run:
-    - ./{{.Output}}
+  run: ./{{.Output}}
 
 CSharp:
   <<: *default
   ext: cs
   build:
     - mcs -out:a.exe {{.Filename}}
-  run:
-    - mono a.exe
+  run: mono a.exe
 
 D:
   <<: *default
   ext: d
   build:
     - dmd -of={{.Output}} {{.Filename}}
-  run:
-    - ./{{.Output}}
+  run: ./{{.Output}}
 
 Elixir:
   <<: *default
   ext: ex
-  run:
-    - elixirc {{.Filename}}
+  run: elixirc {{.Filename}}
 
 Go:
   <<: *default
   ext: go
   build:
     - go build -o {{.Output}} {{.Filename}}
-  run:
-    - ./{{.Output}}
+  run: ./{{.Output}}
 
 Groovy:
   <<: *default
   ext: groovy
-  run:
-    - groovy {{.Filename}}
+  run: groovy {{.Filename}}
 
 Haskell:
   <<: *default
   ext: hs
-  run:
-    - runghc {{.Filename}}
+  run: runghc {{.Filename}}
 
 Java:
   <<: *default
@@ -102,21 +90,18 @@ Java:
   filestem: Main
   build:
     - javac {{.Filename}}
-  run:
-    - java {{.Filestem}}
+  run: java {{.Filestem}}
 
 JavaScript:
   <<: *default
   ext: js
   mco: true
-  run:
-    - node {{.Filename}}
+  run: node {{.Filename}}
 
 Julia:
   <<: *default
   ext: jl
-  run:
-    - julia {{.Filename}}
+  run: julia {{.Filename}}
 
 Kotlin:
   <<: *default
@@ -124,83 +109,71 @@ Kotlin:
   filestem: Main
   build:
     - kotlinc {{.Filename}}
-  run:
-    - kotlin {{.Filestem}}Kt
+  run: kotlin {{.Filestem}}Kt
 
 Lua:
   <<: *default
   ext: lua
-  run:
-    - lua {{.Filename}}
+  run: lua {{.Filename}}
 
 Nim:
   <<: *default
   ext: nim
-  run:
-    - nim --hints:off --verbosity:0 compile --run {{.Filename}}
+  run: nim --hints:off --verbosity:0 compile --run {{.Filename}}
 
 Ocaml:
   <<: *default
   ext: ml
   build:
     - ocamlc -o {{.Output}} {{.Filename}}
-  run:
-    - ./{{.Output}}
+  run: ./{{.Output}}
 
 Perl:
   <<: *default
   ext: pl
-  run:
-    - perl {{.Filename}}
+  run: perl {{.Filename}}
 
 Php:
   <<: *default
   ext: php
-  run:
-    - php {{.Filename}}
+  run: php {{.Filename}}
 
 Python:
   <<: *default
   ext: py
   mco: true
-  run:
-    - python {{.Filename}}
+  run: python {{.Filename}}
 
 Raku:
   <<: *default
   ext: raku
-  run:
-    - raku {{.Filename}}
+  run: raku {{.Filename}}
 
 Ruby:
   <<: *default
   ext: rb
-  run:
-    - ruby {{.Filename}}
+  run: ruby {{.Filename}}
 
 Rust:
   <<: *default
   ext: rs
   build:
     - rustc -o {{.Output}} {{.Filename}}
-  run:
-    - ./{{.Output}}
+  run: ./{{.Output}}
 
 Scala:
   <<: *default
   ext: scala
   build:
     - scalac {{.Filename}}
-  run:
-    - scala Main
+  run: scala Main
 
 Swift:
   <<: *default
   ext: swift
   build:
     - swiftc -o {{.Output}} {{.Filename}}
-  run:
-    - ./{{.Output}}
+  run: ./{{.Output}}
 
 TypeScript:
   <<: *default
@@ -208,5 +181,4 @@ TypeScript:
   mco: true
   build:
     - tsc -out a.js {{.Filename}}
-  run:
-    - node a.js
+  run: node a.js

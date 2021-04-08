@@ -6,8 +6,7 @@ Assembly:
   build:
   - nasm -f elf64 -o a.o main.asm
   - ld -o a.out a.o
-  run:
-  - ./a.out
+  run: ./a.out
   mco: false
 Bash:
   filestem: main
@@ -15,8 +14,7 @@ Bash:
   filename: main.bash
   output: a.out
   build: []
-  run:
-  - bash main.bash
+  run: bash main.bash
   mco: false
 C:
   filestem: main
@@ -25,8 +23,7 @@ C:
   output: a.out
   build:
   - gcc -lm -w -O3 -std=gnu17 main.c -o a.out
-  run:
-  - ./a.out
+  run: ./a.out
   mco: false
 CSharp:
   filestem: main
@@ -35,8 +32,7 @@ CSharp:
   output: a.out
   build:
   - mcs -out:a.exe main.cs
-  run:
-  - mono a.exe
+  run: mono a.exe
   mco: false
 Clojure:
   filestem: main
@@ -44,8 +40,7 @@ Clojure:
   filename: main.clj
   output: a.out
   build: []
-  run:
-  - clj -M main.clj
+  run: clj -M main.clj
   mco: false
 CoffeeScript:
   filestem: main
@@ -53,8 +48,7 @@ CoffeeScript:
   filename: main.coffee
   output: a.out
   build: []
-  run:
-  - coffee main.coffee
+  run: coffee main.coffee
   mco: false
 Cpp:
   filestem: main
@@ -63,8 +57,7 @@ Cpp:
   output: a.out
   build:
   - g++ -lm -w -O3 -std=gnu++17 main.cpp -o a.out
-  run:
-  - ./a.out
+  run: ./a.out
   mco: false
 D:
   filestem: main
@@ -73,8 +66,7 @@ D:
   output: a.out
   build:
   - dmd -of=a.out main.d
-  run:
-  - ./a.out
+  run: ./a.out
   mco: false
 Elixir:
   filestem: main
@@ -82,8 +74,7 @@ Elixir:
   filename: main.ex
   output: a.out
   build: []
-  run:
-  - elixirc main.ex
+  run: elixirc main.ex
   mco: false
 Go:
   filestem: main
@@ -92,8 +83,7 @@ Go:
   output: a.out
   build:
   - go build -o a.out main.go
-  run:
-  - ./a.out
+  run: ./a.out
   mco: false
 Groovy:
   filestem: main
@@ -101,8 +91,7 @@ Groovy:
   filename: main.groovy
   output: a.out
   build: []
-  run:
-  - groovy main.groovy
+  run: groovy main.groovy
   mco: false
 Haskell:
   filestem: main
@@ -110,8 +99,7 @@ Haskell:
   filename: main.hs
   output: a.out
   build: []
-  run:
-  - runghc main.hs
+  run: runghc main.hs
   mco: false
 Java:
   filestem: Main
@@ -120,8 +108,7 @@ Java:
   output: a.out
   build:
   - javac Main.java
-  run:
-  - java Main
+  run: java Main
   mco: true
 JavaScript:
   filestem: main
@@ -129,8 +116,7 @@ JavaScript:
   filename: main.js
   output: a.out
   build: []
-  run:
-  - node main.js
+  run: node main.js
   mco: true
 Julia:
   filestem: main
@@ -138,8 +124,7 @@ Julia:
   filename: main.jl
   output: a.out
   build: []
-  run:
-  - julia main.jl
+  run: julia main.jl
   mco: false
 Kotlin:
   filestem: Main
@@ -148,8 +133,7 @@ Kotlin:
   output: a.out
   build:
   - kotlinc Main.kt
-  run:
-  - kotlin MainKt
+  run: kotlin MainKt
   mco: false
 Lua:
   filestem: main
@@ -157,8 +141,7 @@ Lua:
   filename: main.lua
   output: a.out
   build: []
-  run:
-  - lua main.lua
+  run: lua main.lua
   mco: false
 Nim:
   filestem: main
@@ -166,8 +149,7 @@ Nim:
   filename: main.nim
   output: a.out
   build: []
-  run:
-  - nim --hints:off --verbosity:0 compile --run main.nim
+  run: nim --hints:off --verbosity:0 compile --run main.nim
   mco: false
 Ocaml:
   filestem: main
@@ -176,8 +158,7 @@ Ocaml:
   output: a.out
   build:
   - ocamlc -o a.out main.ml
-  run:
-  - ./a.out
+  run: ./a.out
   mco: false
 Perl:
   filestem: main
@@ -185,8 +166,7 @@ Perl:
   filename: main.pl
   output: a.out
   build: []
-  run:
-  - perl main.pl
+  run: perl main.pl
   mco: false
 Php:
   filestem: main
@@ -194,8 +174,7 @@ Php:
   filename: main.php
   output: a.out
   build: []
-  run:
-  - php main.php
+  run: php main.php
   mco: false
 Python:
   filestem: main
@@ -203,8 +182,7 @@ Python:
   filename: main.py
   output: a.out
   build: []
-  run:
-  - python main.py
+  run: python main.py
   mco: true
 Raku:
   filestem: main
@@ -212,8 +190,7 @@ Raku:
   filename: main.raku
   output: a.out
   build: []
-  run:
-  - raku main.raku
+  run: raku main.raku
   mco: false
 Ruby:
   filestem: main
@@ -221,8 +198,7 @@ Ruby:
   filename: main.rb
   output: a.out
   build: []
-  run:
-  - ruby main.rb
+  run: ruby main.rb
   mco: false
 Rust:
   filestem: main
@@ -231,8 +207,7 @@ Rust:
   output: a.out
   build:
   - rustc -o a.out main.rs
-  run:
-  - ./a.out
+  run: ./a.out
   mco: false
 Scala:
   filestem: main
@@ -241,8 +216,7 @@ Scala:
   output: a.out
   build:
   - scalac main.scala
-  run:
-  - scala Main
+  run: scala Main
   mco: false
 Swift:
   filestem: main
@@ -251,8 +225,7 @@ Swift:
   output: a.out
   build:
   - swiftc -o a.out main.swift
-  run:
-  - ./a.out
+  run: ./a.out
   mco: false
 TypeScript:
   filestem: main
@@ -261,8 +234,7 @@ TypeScript:
   output: a.out
   build:
   - tsc -out a.js main.ts
-  run:
-  - node a.js
+  run: node a.js
   mco: true
 Unknown:
   filestem: main
@@ -270,5 +242,5 @@ Unknown:
   filename: main.txt
   output: a.out
   build: []
-  run: []
+  run: ""
   mco: false

@@ -21,7 +21,7 @@ type LanguageProfile struct {
 	Filename string
 	Output   string
 	Build    []string
-	Run      []string
+	Run      string
 	Mco      bool
 }
 
