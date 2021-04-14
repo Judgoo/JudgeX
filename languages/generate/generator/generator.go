@@ -64,12 +64,9 @@ func NewGenerator() *Generator {
 	funcs := sprig.TxtFuncMap()
 
 	funcs["stringifyRawName"] = StringifyRawName
-	funcs["stringifyFileName"] = StringifyFileName
 	funcs["mapify"] = Mapify
-	funcs["mapifyFileName"] = MapifyFileName
 	funcs["unmapify"] = Unmapify
 	funcs["namify"] = Namify
-	funcs["namifyFileNames"] = NamifyFileNames
 
 	_, filename, _, _ := runtime.Caller(0)
 	confPath := path.Join(filename, "../languages.tmpl")

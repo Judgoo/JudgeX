@@ -12,28 +12,6 @@ func StringifyRawName(e Enum) (ret string, err error) {
 	return
 }
 
-// Stringify returns a string that is all of the enum value names concatenated without a separator
-func StringifyFileName(e Enum) (ret string, err error) {
-	for _, val := range e.Values {
-		ret = ret + val.Profile.Filename
-	}
-	return
-}
-
-// Mapify returns a map that is all of the indexes for a string value lookup
-func MapifyFileName(e Enum) (ret string, err error) {
-	strName := fmt.Sprintf(`_%sFileName`, e.Name)
-	ret = fmt.Sprintf("map[%s]string{\n", e.Name)
-	index := 0
-	for _, val := range e.Values {
-		nextIndex := index + len(val.Profile.Filename)
-		ret = fmt.Sprintf("%s%d: %s[%d:%d],\n", ret, val.Value, strName, index, nextIndex)
-		index = nextIndex
-	}
-	ret = ret + `}`
-	return
-}
-
 // Mapify returns a map that is all of the indexes for a string value lookup
 func Mapify(e Enum) (ret string, err error) {
 	strName := fmt.Sprintf(`_%sName`, e.Name)
@@ -72,20 +50,6 @@ func Namify(e Enum) (ret string, err error) {
 	index := 0
 	for _, val := range e.Values {
 		nextIndex := index + len(val.Name)
-		ret = fmt.Sprintf("%s%s[%d:%d],\n", ret, strName, index, nextIndex)
-		index = nextIndex
-	}
-	ret = ret + "}"
-	return
-}
-
-// Namify returns a slice that is all of the possible names for an enum in a slice
-func NamifyFileNames(e Enum) (ret string, err error) {
-	strName := fmt.Sprintf(`_%sFileName`, e.Name)
-	ret = "[]string{\n"
-	index := 0
-	for _, val := range e.Values {
-		nextIndex := index + len(val.Profile.Filename)
 		ret = fmt.Sprintf("%s%s[%d:%d],\n", ret, strName, index, nextIndex)
 		index = nextIndex
 	}
