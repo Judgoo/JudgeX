@@ -30,16 +30,6 @@ C:
     - gcc -lm -w -O3 -std=gnu17 {{.Filename}} -o {{.Output}}
   run: ./{{.Output}}
 
-Clojure:
-  <<: *default
-  ext: clj
-  run: clj -M {{.Filename}}
-
-CoffeeScript:
-  <<: *default
-  ext: coffee
-  run: coffee {{.Filename}}
-
 Cpp:
   <<: *default
   ext: cpp
@@ -61,22 +51,12 @@ D:
     - dmd -of={{.Output}} {{.Filename}}
   run: ./{{.Output}}
 
-Elixir:
-  <<: *default
-  ext: ex
-  run: elixirc {{.Filename}}
-
 Go:
   <<: *default
   ext: go
   build:
     - go build -o {{.Output}} {{.Filename}}
   run: ./{{.Output}}
-
-Groovy:
-  <<: *default
-  ext: groovy
-  run: groovy {{.Filename}}
 
 Haskell:
   <<: *default
@@ -180,5 +160,5 @@ TypeScript:
   ext: ts
   mco: true
   build:
-    - tsc -out a.js {{.Filename}}
+    - esbuild {{.Filename}} --outfile=a.js --platform=node --target=node14
   run: node a.js

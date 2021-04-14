@@ -34,22 +34,6 @@ CSharp:
   - mcs -out:a.exe main.cs
   run: mono a.exe
   mco: false
-Clojure:
-  filestem: main
-  ext: clj
-  filename: main.clj
-  output: a.out
-  build: []
-  run: clj -M main.clj
-  mco: false
-CoffeeScript:
-  filestem: main
-  ext: coffee
-  filename: main.coffee
-  output: a.out
-  build: []
-  run: coffee main.coffee
-  mco: false
 Cpp:
   filestem: main
   ext: cpp
@@ -68,14 +52,6 @@ D:
   - dmd -of=a.out main.d
   run: ./a.out
   mco: false
-Elixir:
-  filestem: main
-  ext: ex
-  filename: main.ex
-  output: a.out
-  build: []
-  run: elixirc main.ex
-  mco: false
 Go:
   filestem: main
   ext: go
@@ -84,14 +60,6 @@ Go:
   build:
   - go build -o a.out main.go
   run: ./a.out
-  mco: false
-Groovy:
-  filestem: main
-  ext: groovy
-  filename: main.groovy
-  output: a.out
-  build: []
-  run: groovy main.groovy
   mco: false
 Haskell:
   filestem: main
@@ -233,7 +201,7 @@ TypeScript:
   filename: main.ts
   output: a.out
   build:
-  - tsc -out a.js main.ts
+  - esbuild main.ts --outfile=a.js --platform=node --target=node14
   run: node a.js
   mco: true
 Unknown:
