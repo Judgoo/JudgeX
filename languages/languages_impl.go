@@ -35,8 +35,6 @@ const (
 	Kotlin
 	// a LanguageType of type Lua.
 	Lua
-	// a LanguageType of type Nim.
-	Nim
 	// a LanguageType of type Ocaml.
 	Ocaml
 	// a LanguageType of type Perl.
@@ -45,8 +43,6 @@ const (
 	Php
 	// a LanguageType of type Python.
 	Python
-	// a LanguageType of type Raku.
-	Raku
 	// a LanguageType of type Ruby.
 	Ruby
 	// a LanguageType of type Rust.
@@ -61,7 +57,7 @@ const (
 	Unknown
 )
 
-const _LanguageTypeName = "AssemblyBashCCSharpCppDGoHaskellJavaJavaScriptJuliaKotlinLuaNimOcamlPerlPhpPythonRakuRubyRustScalaSwiftTypeScriptUnknown"
+const _LanguageTypeName = "AssemblyBashCCSharpCppDGoHaskellJavaJavaScriptJuliaKotlinLuaOcamlPerlPhpPythonRubyRustScalaSwiftTypeScriptUnknown"
 
 var _LanguageTypeNames = []string{
 	_LanguageTypeName[0:8],
@@ -77,18 +73,16 @@ var _LanguageTypeNames = []string{
 	_LanguageTypeName[46:51],
 	_LanguageTypeName[51:57],
 	_LanguageTypeName[57:60],
-	_LanguageTypeName[60:63],
-	_LanguageTypeName[63:68],
-	_LanguageTypeName[68:72],
-	_LanguageTypeName[72:75],
-	_LanguageTypeName[75:81],
-	_LanguageTypeName[81:85],
-	_LanguageTypeName[85:89],
-	_LanguageTypeName[89:93],
-	_LanguageTypeName[93:98],
-	_LanguageTypeName[98:103],
-	_LanguageTypeName[103:113],
-	_LanguageTypeName[113:120],
+	_LanguageTypeName[60:65],
+	_LanguageTypeName[65:69],
+	_LanguageTypeName[69:72],
+	_LanguageTypeName[72:78],
+	_LanguageTypeName[78:82],
+	_LanguageTypeName[82:86],
+	_LanguageTypeName[86:91],
+	_LanguageTypeName[91:96],
+	_LanguageTypeName[96:106],
+	_LanguageTypeName[106:113],
 }
 
 // LanguageTypeNames returns a list of possible string values of LanguageType.
@@ -112,18 +106,16 @@ var _LanguageTypeMap = map[LanguageType]string{
 	10: _LanguageTypeName[46:51],
 	11: _LanguageTypeName[51:57],
 	12: _LanguageTypeName[57:60],
-	13: _LanguageTypeName[60:63],
-	14: _LanguageTypeName[63:68],
-	15: _LanguageTypeName[68:72],
-	16: _LanguageTypeName[72:75],
-	17: _LanguageTypeName[75:81],
-	18: _LanguageTypeName[81:85],
-	19: _LanguageTypeName[85:89],
-	20: _LanguageTypeName[89:93],
-	21: _LanguageTypeName[93:98],
-	22: _LanguageTypeName[98:103],
-	23: _LanguageTypeName[103:113],
-	24: _LanguageTypeName[113:120],
+	13: _LanguageTypeName[60:65],
+	14: _LanguageTypeName[65:69],
+	15: _LanguageTypeName[69:72],
+	16: _LanguageTypeName[72:78],
+	17: _LanguageTypeName[78:82],
+	18: _LanguageTypeName[82:86],
+	19: _LanguageTypeName[86:91],
+	20: _LanguageTypeName[91:96],
+	21: _LanguageTypeName[96:106],
+	22: _LanguageTypeName[106:113],
 }
 
 // String implements the Stringer interface.
@@ -161,30 +153,26 @@ var _LanguageTypeValue = map[string]LanguageType{
 	strings.ToLower(_LanguageTypeName[51:57]):   11,
 	_LanguageTypeName[57:60]:                    12,
 	strings.ToLower(_LanguageTypeName[57:60]):   12,
-	_LanguageTypeName[60:63]:                    13,
-	strings.ToLower(_LanguageTypeName[60:63]):   13,
-	_LanguageTypeName[63:68]:                    14,
-	strings.ToLower(_LanguageTypeName[63:68]):   14,
-	_LanguageTypeName[68:72]:                    15,
-	strings.ToLower(_LanguageTypeName[68:72]):   15,
-	_LanguageTypeName[72:75]:                    16,
-	strings.ToLower(_LanguageTypeName[72:75]):   16,
-	_LanguageTypeName[75:81]:                    17,
-	strings.ToLower(_LanguageTypeName[75:81]):   17,
-	_LanguageTypeName[81:85]:                    18,
-	strings.ToLower(_LanguageTypeName[81:85]):   18,
-	_LanguageTypeName[85:89]:                    19,
-	strings.ToLower(_LanguageTypeName[85:89]):   19,
-	_LanguageTypeName[89:93]:                    20,
-	strings.ToLower(_LanguageTypeName[89:93]):   20,
-	_LanguageTypeName[93:98]:                    21,
-	strings.ToLower(_LanguageTypeName[93:98]):   21,
-	_LanguageTypeName[98:103]:                   22,
-	strings.ToLower(_LanguageTypeName[98:103]):  22,
-	_LanguageTypeName[103:113]:                  23,
-	strings.ToLower(_LanguageTypeName[103:113]): 23,
-	_LanguageTypeName[113:120]:                  24,
-	strings.ToLower(_LanguageTypeName[113:120]): 24,
+	_LanguageTypeName[60:65]:                    13,
+	strings.ToLower(_LanguageTypeName[60:65]):   13,
+	_LanguageTypeName[65:69]:                    14,
+	strings.ToLower(_LanguageTypeName[65:69]):   14,
+	_LanguageTypeName[69:72]:                    15,
+	strings.ToLower(_LanguageTypeName[69:72]):   15,
+	_LanguageTypeName[72:78]:                    16,
+	strings.ToLower(_LanguageTypeName[72:78]):   16,
+	_LanguageTypeName[78:82]:                    17,
+	strings.ToLower(_LanguageTypeName[78:82]):   17,
+	_LanguageTypeName[82:86]:                    18,
+	strings.ToLower(_LanguageTypeName[82:86]):   18,
+	_LanguageTypeName[86:91]:                    19,
+	strings.ToLower(_LanguageTypeName[86:91]):   19,
+	_LanguageTypeName[91:96]:                    20,
+	strings.ToLower(_LanguageTypeName[91:96]):   20,
+	_LanguageTypeName[96:106]:                   21,
+	strings.ToLower(_LanguageTypeName[96:106]):  21,
+	_LanguageTypeName[106:113]:                  22,
+	strings.ToLower(_LanguageTypeName[106:113]): 22,
 }
 
 // ParseLanguageType attempts to convert a string to a LanguageType

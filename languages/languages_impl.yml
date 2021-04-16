@@ -29,7 +29,7 @@ CSharp:
   filestem: main
   ext: cs
   filename: main.cs
-  output: a.out
+  output: a.exe
   build:
   - mcs -out:a.exe main.cs
   run: mono a.exe
@@ -111,14 +111,6 @@ Lua:
   build: []
   run: lua main.lua
   mco: false
-Nim:
-  filestem: main
-  ext: nim
-  filename: main.nim
-  output: a.out
-  build: []
-  run: nim --hints:off --verbosity:0 compile --run main.nim
-  mco: false
 Ocaml:
   filestem: main
   ext: ml
@@ -152,14 +144,6 @@ Python:
   build: []
   run: python main.py
   mco: true
-Raku:
-  filestem: main
-  ext: raku
-  filename: main.raku
-  output: a.out
-  build: []
-  run: raku main.raku
-  mco: false
 Ruby:
   filestem: main
   ext: rb
