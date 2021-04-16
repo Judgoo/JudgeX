@@ -15,25 +15,29 @@ import (
 	"strings"
 	"time"
 
+	judger "github.com/Judgoo/Judger/entities"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/pkg/errors"
 	"github.com/zeebo/blake3"
+	"gopkg.in/yaml.v2"
 )
 
 type LanguageInfo struct {
-	Language languages.LanguageType
-	Version  string
+	Language    languages.LanguageType
+	VersionName string
+	Version     languages.VersionInfo
 }
 
 type File struct {
 	Path    string
-	Content string
+	Content []byte
 }
 
-var CodeEmptyError = errors.New("code is empty")
-var TestDataLengthNotEqual = errors.New("length of inputs and outputs are not equal")
-var TestDataEmpty = errors.New("no testdata found")
+var ErrorEmptyCode = errors.New("code is empty")
+var ErrorTestDataLengthNotEqual = errors.New("length of inputs and outputs are not equal")
+var ErrorTestDataEmpty = errors.New("no testdata found")
+var ErrorLanguageVersionNotFound = errors.New("version not found")
 
 func getWorkspacePath(id string, hash string) string {
 	// 也许可以换成专业的文件系统来做这件事
@@ -49,71 +53,95 @@ func getWorkspacePath(id string, hash string) string {
 	return path.Join(workDir, folderName)
 }
 
-func WriteFile(file File) error {
+func WriteFile(file *File) error {
 	err := os.MkdirAll(filepath.Dir(file.Path), os.ModeDir|(xUtils.OS_USER_RWX|xUtils.OS_ALL_R))
 	if err != nil {
 		return errors.Wrapf(err, "create directory %s fail", file.Path)
 	}
-	return os.WriteFile(file.Path, []byte(file.Content), (xUtils.OS_USER_RW | xUtils.OS_ALL_R))
-}
-
-func WriteCode(file File) error {
-	if strings.TrimSpace(file.Content) == "" {
-		return CodeEmptyError
-	}
-
-	return WriteFile(file)
+	return os.WriteFile(file.Path, file.Content, (xUtils.OS_USER_RW | xUtils.OS_ALL_R))
 }
 
 type TestData = map[int][2]File
+type TestDataEntrys = []string
 
-func WriteTestData(workPath string, data entities.JudgePostData) (TestData, error) {
+func writeTestData(workPath string, data *entities.JudgePostData) (TestData, TestDataEntrys, error) {
 	inputs := data.Inputs
 	outputs := data.Outputs
 	if len(inputs) != len(outputs) {
-		return nil, TestDataLengthNotEqual
+		return nil, nil, ErrorTestDataLengthNotEqual
 	}
 	if len(inputs) == 0 {
-		return nil, TestDataEmpty
+		return nil, nil, ErrorTestDataEmpty
 	}
 	testdata := make(TestData)
+	testdataEntrys := make(TestDataEntrys, 0, len(inputs)+1)
 	for i := range inputs {
+		inS := fmt.Sprintf("%d.in", i)
+		outS := fmt.Sprintf("%d.out", i)
+		entry := fmt.Sprintf("%s::%s", inS, outS)
+		testdataEntrys = append(testdataEntrys, entry)
 		in := File{
-			path.Join(workPath, fmt.Sprintf("%v.in", i)),
-			inputs[i],
+			path.Join(workPath, inS),
+			[]byte(inputs[i]),
 		}
 		out := File{
-			path.Join(workPath, fmt.Sprintf("%v.out", i)),
-			outputs[i],
+			path.Join(workPath, outS),
+			[]byte(outputs[i]),
 		}
-		WriteFile(in)
-		WriteFile(out)
+		WriteFile(&in)
+		WriteFile(&out)
 		testdata[i] = [2]File{in, out}
 	}
-	return testdata, nil
+	return testdata, testdataEntrys, nil
 }
 
 type TestDataResult struct {
-	Result TestData
+	Result TestDataEntrys
 	Error  error
 }
 
-func getTestData(workPath string, data entities.JudgePostData) TestDataResult {
+func processTestData(workPath string, data *entities.JudgePostData) TestDataResult {
 	tdCh := make(chan TestDataResult)
 
 	go func() {
-		testdata, err := WriteTestData(workPath, data)
+		_, testdataEntrys, err := writeTestData(workPath, data)
 		if err != nil {
 			tdCh <- TestDataResult{nil, err}
 		} else {
-			tdCh <- TestDataResult{testdata, nil}
+			tdCh <- TestDataResult{testdataEntrys, nil}
 		}
 	}()
 
 	return <-tdCh
 }
 
-func doJudge(c *fiber.Ctx, data entities.JudgePostData, languageInfo LanguageInfo) error {
+func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *LanguageInfo, testdataEntrys *TestDataEntrys) error {
+	lang := languageInfo.Language
+	langProfile := lang.Profile()
+	var judger = judger.IJudger{
+		Language: lang.String(),
+		Build:    langProfile.Build,
+		Run:      langProfile.Run,
+		RunnerArgs: &judger.IRunnerArgs{
+			CpuTime: int(data.TimeLimit),
+			Memory:  int(data.MemoryLimit),
+			Mco:     langProfile.Mco,
+		},
+		TestData: *testdataEntrys,
+	}
+	fileContent, err := yaml.Marshal(judger)
+	if err != nil {
+		return err
+	}
+	file := &File{
+		Path:    filepath.Join(workPath, "judger.yml"),
+		Content: fileContent,
+	}
+
+	return WriteFile(file)
+}
+
+func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageInfo) error {
 	// 设置随机种子
 	rand.Seed(time.Now().UnixNano())
 
@@ -130,30 +158,34 @@ func doJudge(c *fiber.Ctx, data entities.JudgePostData, languageInfo LanguageInf
 	fmt.Println(workPath)
 	codeCh := make(chan error)
 	go func() {
-		codeCh <- WriteCode(File{
+		if strings.TrimSpace(data.Code) == "" {
+			codeCh <- ErrorEmptyCode
+		}
+		file := &File{
 			filepath.Join(workPath, languageInfo.Language.Profile().Filename),
-			data.Code,
-		})
+			[]byte(data.Code),
+		}
+		codeCh <- WriteFile(file)
 	}()
 	err := <-codeCh
 	if err != nil {
 		switch errors.Cause(err) {
-		case CodeEmptyError:
+		case ErrorEmptyCode:
 		default:
 		}
 		return pkg.ApiAbortWithoutData(c, 400, err.Error())
 
 	}
-	tdResult := getTestData(workPath, data)
+	tdResult := processTestData(workPath, data)
 	if tdResult.Error != nil {
 		switch errors.Cause(tdResult.Error) {
-		case TestDataEmpty:
-		case TestDataLengthNotEqual:
+		case ErrorTestDataEmpty:
+		case ErrorTestDataLengthNotEqual:
 		default:
 		}
 		return pkg.ApiAbortWithoutData(c, 400, tdResult.Error.Error())
-
 	}
+	generateJudgerYml(workPath, data, languageInfo, &tdResult.Result)
 	return c.JSON(struct {
 		Data     string
 		Language string
@@ -163,20 +195,28 @@ func doJudge(c *fiber.Ctx, data entities.JudgePostData, languageInfo LanguageInf
 	}{
 		Data:     "Hello, World!",
 		Language: languageInfo.Language.String(),
-		Version:  languageInfo.Version,
+		Version:  languageInfo.VersionName,
 		Build:    languageInfo.Language.Profile().Build,
 		Run:      languageInfo.Language.Profile().Run,
 	})
 }
 
 func judgeLanguageByVersion(c *fiber.Ctx) error {
-	language := utils.CopyString(c.Params("language"))
-	version := utils.CopyString(c.Params("version", "latest"))
-	languageEnum, err := languages.ParseLanguageType(language)
-	languageInfo := LanguageInfo{Language: languageEnum, Version: version}
+	languageString := utils.CopyString(c.Params("language"))
+	language, err := languages.ParseLanguageType(languageString)
 	if err != nil {
 		return pkg.ApiAbortWithoutData(c, fiber.StatusBadRequest, err.Error())
 	}
+
+	version := c.Params("version", "")
+
+	versionName, versionInfo, exists := language.GetVersion(version)
+	if !exists {
+		return pkg.ApiAbort(c, fiber.StatusBadRequest, ErrorLanguageVersionNotFound.Error(), fmt.Sprintf("version %s not found in language %s", version, languageString))
+	}
+
+	languageInfo := LanguageInfo{Language: language, VersionName: versionName, Version: versionInfo}
+
 	var requestBody entities.JudgePostData
 	err = xUtils.ParseJSONBody(c, &requestBody)
 	if err != nil {
@@ -186,5 +226,5 @@ func judgeLanguageByVersion(c *fiber.Ctx) error {
 	if validationErrors != nil {
 		return pkg.ApiAbort(c, fiber.StatusUnprocessableEntity, "Validation Error", validationErrors)
 	}
-	return doJudge(c, requestBody, languageInfo)
+	return doJudge(c, &requestBody, &languageInfo)
 }

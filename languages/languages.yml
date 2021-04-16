@@ -40,9 +40,10 @@ Cpp:
 CSharp:
   <<: *default
   ext: cs
+  output: a.exe
   build:
-    - mcs -out:a.exe {{.Filename}}
-  run: mono a.exe
+    - mcs -out:{{.Output}} {{.Filename}}
+  run: mono {{.Output}}
 
 D:
   <<: *default
@@ -96,11 +97,6 @@ Lua:
   ext: lua
   run: lua {{.Filename}}
 
-Nim:
-  <<: *default
-  ext: nim
-  run: nim --hints:off --verbosity:0 compile --run {{.Filename}}
-
 Ocaml:
   <<: *default
   ext: ml
@@ -123,11 +119,6 @@ Python:
   ext: py
   mco: true
   run: python {{.Filename}}
-
-Raku:
-  <<: *default
-  ext: raku
-  run: raku {{.Filename}}
 
 Ruby:
   <<: *default

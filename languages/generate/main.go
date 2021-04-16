@@ -37,6 +37,8 @@ func main() {
 	}
 	// Make the output more consistent by iterating over sorted keys of map
 	sort.Strings(keys)
+
+	// 解析每一句的 template
 	for _, k := range keys {
 		(*profileMap[k]).Filename = (*profileMap[k]).Filestem + "." + (*profileMap[k]).Ext
 
