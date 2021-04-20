@@ -35,5 +35,3 @@ var _ = yaml.Unmarshal(LanguageData, &ProfileMap)
 func (lang LanguageType) Profile() *LanguageProfile {
 	return ProfileMap[lang.String()]
 }
-
-var OnlyCheckMem = []LanguageType{Java, Kotlin, JavaScript, TypeScript}

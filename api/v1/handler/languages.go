@@ -1,4 +1,4 @@
-package v1
+package handler
 
 import (
 	"JudgeX/languages"
@@ -16,7 +16,7 @@ func GetLanguages(c *fiber.Ctx) error {
 	var result = map[string][]resultItem{}
 	for k, v := range languages.VersionMap {
 		result[k.String()] = []resultItem{}
-		for versionName, _v := range v {
+		for versionName, _v := range *v {
 			result[k.String()] = append(result[k.String()], resultItem{
 				versionName,
 				_v.Description,

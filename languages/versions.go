@@ -5,14 +5,16 @@ type VersionInfo struct {
 	ImageName   string
 	Description string
 	ExampleCode string
+	Default     bool
 }
 
 // 名称 -> 描述
-type Versions map[string]VersionInfo
+type Versions map[string]*VersionInfo
 
-var VersionMap = map[LanguageType]Versions{
+var VersionMap = map[LanguageType]*Versions{
 	Assembly: {
 		"nasm": {
+			Default:     true,
 			ImageName:   "judgoo/nasm:v0.0.1",
 			Description: "nasm on alpine",
 			ExampleCode: `section .data
@@ -34,6 +36,7 @@ _start:
 	},
 	Bash: {
 		"bash": {
+			Default:     true,
 			ImageName:   "judgoo/bash:v0.0.1",
 			Description: "bash on alpine",
 			ExampleCode: `echo "helloworld"`,
@@ -41,6 +44,7 @@ _start:
 	},
 	C: {
 		"gcc8": {
+			Default:     true,
 			ImageName:   "judgoo/gpp:v0.0.1",
 			Description: "gcc on debian",
 			ExampleCode: `#include <stdio.h>
@@ -55,6 +59,7 @@ int main()
 	},
 	CSharp: {
 		"csharp": {
+			Default:     true,
 			ImageName:   "judgoo/csharp:v0.0.1",
 			Description: "csharp on alpine",
 			ExampleCode: `using System;
@@ -70,6 +75,7 @@ class MainClass {
 	},
 	Cpp: {
 		"g++8": {
+			Default:     true,
 			ImageName:   "judgoo/gpp:v0.0.1",
 			Description: "g++ in debian",
 			ExampleCode: `#include <iostream>
@@ -84,6 +90,7 @@ int main()
 	},
 	D: {
 		"dlang2": {
+			Default:     true,
 			ImageName:   "judgoo/dlang2:v0.0.1",
 			Description: "dlang2 on alpine",
 			ExampleCode: `import std.stdio;
@@ -96,6 +103,7 @@ void main()
 	},
 	Go: {
 		"golang16": {
+			Default:     true,
 			ImageName:   "judgoo/golang:v0.0.1",
 			Description: "golang on alpine",
 			ExampleCode: `package main
@@ -110,13 +118,24 @@ func main() {
 		},
 	},
 	Haskell: {
-		"nasm": {
+		"haskell": {
+			Default:     true,
 			ImageName:   "judgoo/haskell:v0.0.1",
 			Description: "haskell on alpine",
 			ExampleCode: `main = putStrLn "Hello World!"`,
 		},
 	},
 	Java: {
+		"openjdk11": {
+			Default:     true,
+			ImageName:   "judgoo/openjdk11:v0.0.1",
+			Description: "openjdk11 on debian",
+			ExampleCode: `class Main {
+    public static void main(String[] args) {
+        System.out.println("helloworld");
+    }
+}`,
+		},
 		"openjdk8": {
 			ImageName:   "judgoo/kotlin1.42:v0.0.1",
 			Description: "openjdk8 on debian",
@@ -126,18 +145,10 @@ func main() {
     }
 }`,
 		},
-		"openjdk11": {
-			ImageName:   "judgoo/openjdk11:v0.0.1",
-			Description: "openjdk11 on debian",
-			ExampleCode: `class Main {
-    public static void main(String[] args) {
-        System.out.println("helloworld");
-    }
-}`,
-		},
 	},
 	JavaScript: {
 		"nodejs14": {
+			Default:     true,
 			ImageName:   "judgoo/nodejs14:v0.0.1",
 			Description: "nodejs14 on alpine",
 			ExampleCode: `console.log('helloworld');`,
@@ -145,6 +156,7 @@ func main() {
 	},
 	Julia: {
 		"julia1.6": {
+			Default:     true,
 			ImageName:   "judgoo/julia1.6:v0.0.1",
 			Description: "julia on alpine",
 			ExampleCode: `println("helloworld")`,
@@ -152,6 +164,7 @@ func main() {
 	},
 	Kotlin: {
 		"kotlin1.42": {
+			Default:     true,
 			ImageName:   "judgoo/kotlin1.42:v0.0.1",
 			Description: "kotlin1.42 on debian",
 			ExampleCode: `fun main(args: Array<String>){
@@ -161,6 +174,7 @@ func main() {
 	},
 	Lua: {
 		"lua": {
+			Default:     true,
 			ImageName:   "judgoo/lua:v0.0.1",
 			Description: "lua on alpine",
 			ExampleCode: `print("helloworld");`,
@@ -168,6 +182,7 @@ func main() {
 	},
 	Ocaml: {
 		"ocaml": {
+			Default:     true,
 			ImageName:   "judgoo/ocaml:v0.0.1",
 			Description: "ocaml on alpine",
 			ExampleCode: `print_endline "helloworld"`,
@@ -175,6 +190,7 @@ func main() {
 	},
 	Perl: {
 		"perl": {
+			Default:     true,
 			ImageName:   "judgoo/perl:v0.0.1",
 			Description: "perl on alpine",
 			ExampleCode: `print "helloworld\n";`,
@@ -182,6 +198,7 @@ func main() {
 	},
 	Php: {
 		"php": {
+			Default:     true,
 			ImageName:   "judgoo/php:v0.0.1",
 			Description: "php on alpine",
 			ExampleCode: `<?php
@@ -190,6 +207,7 @@ func main() {
 	},
 	Python: {
 		"python3.9": {
+			Default:     true,
 			ImageName:   "judgoo/python3.9:v0.0.1",
 			Description: "python3.9 on debian",
 			ExampleCode: `print("helloworld");`,
@@ -202,6 +220,7 @@ func main() {
 	},
 	Ruby: {
 		"ruby": {
+			Default:     true,
 			ImageName:   "judgoo/ruby:v0.0.1",
 			Description: "ruby on alpine",
 			ExampleCode: `puts "helloworld"`,
@@ -209,6 +228,7 @@ func main() {
 	},
 	Rust: {
 		"rust1.51": {
+			Default:     true,
 			ImageName:   "judgoo/rust1.51:v0.0.1",
 			Description: "rust1.51 on debian",
 			ExampleCode: `fn main() {
@@ -218,6 +238,7 @@ func main() {
 	},
 	Scala: {
 		"scala": {
+			Default:     true,
 			ImageName:   "judgoo/scala:v0.0.1",
 			Description: "scala on debian",
 			ExampleCode: `object Main extends App {
@@ -227,6 +248,7 @@ func main() {
 	},
 	Swift: {
 		"swift": {
+			Default:     true,
 			ImageName:   "judgoo/swift:v0.0.1",
 			Description: "swift on debian",
 			ExampleCode: `print("helloworld")`,
@@ -234,6 +256,7 @@ func main() {
 	},
 	TypeScript: {
 		"typescript": {
+			Default:     true,
 			ImageName:   "judgoo/typescript:v0.0.1",
 			Description: "typescript on alpine",
 			ExampleCode: `console.log('helloworld');`,
@@ -241,25 +264,28 @@ func main() {
 	},
 }
 
-func (lang *LanguageType) GetVersions(version string) Versions {
+func (lang *LanguageType) GetVersions(version string) *Versions {
 	return VersionMap[*lang]
 }
 
-func (lang *LanguageType) GetVersion(version string) (string, VersionInfo, bool) {
+func (lang *LanguageType) GetVersion(version string) (string, *VersionInfo, bool) {
 	var (
-		vInfo VersionInfo
+		vInfo *VersionInfo
 		vName string
 		ok    bool
 	)
+	versions := VersionMap[*lang]
 	if version == "" {
 		// 获取第一个 version
-		for name, v := range VersionMap[*lang] {
-			vName = name
-			vInfo = v
-			break
+		for name, v := range *versions {
+			if v.Default {
+				vName = name
+				vInfo = v
+				break
+			}
 		}
 		return vName, vInfo, true
 	}
-	vInfo, ok = VersionMap[*lang][version]
+	vInfo, ok = (*versions)[version]
 	return version, vInfo, ok
 }

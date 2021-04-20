@@ -1,4 +1,4 @@
-package v1
+package handler
 
 import (
 	"JudgeX/api/v1/entities"
@@ -26,7 +26,7 @@ import (
 type LanguageInfo struct {
 	Language    languages.LanguageType
 	VersionName string
-	Version     languages.VersionInfo
+	Version     *languages.VersionInfo
 }
 
 type File struct {
@@ -176,16 +176,16 @@ func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageI
 		return pkg.ApiAbortWithoutData(c, 400, err.Error())
 
 	}
-	tdResult := processTestData(workPath, data)
-	if tdResult.Error != nil {
-		switch errors.Cause(tdResult.Error) {
+	testdataResult := processTestData(workPath, data)
+	if testdataResult.Error != nil {
+		switch errors.Cause(testdataResult.Error) {
 		case ErrorTestDataEmpty:
 		case ErrorTestDataLengthNotEqual:
 		default:
 		}
-		return pkg.ApiAbortWithoutData(c, 400, tdResult.Error.Error())
+		return pkg.ApiAbortWithoutData(c, 400, testdataResult.Error.Error())
 	}
-	generateJudgerYml(workPath, data, languageInfo, &tdResult.Result)
+	generateJudgerYml(workPath, data, languageInfo, &testdataResult.Result)
 	return c.JSON(struct {
 		Data     string
 		Language string
@@ -201,7 +201,7 @@ func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageI
 	})
 }
 
-func judgeLanguageByVersion(c *fiber.Ctx) error {
+func JudgeLanguageByVersion(c *fiber.Ctx) error {
 	languageString := utils.CopyString(c.Params("language"))
 	language, err := languages.ParseLanguageType(languageString)
 	if err != nil {
