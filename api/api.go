@@ -1,7 +1,7 @@
 package api
 
 import (
-	v1 "JudgeX/api/v1"
+	v1 "github.com/Judgoo/JudgeX/api/v1"
 
 	"github.com/gofiber/fiber/v2"
 )

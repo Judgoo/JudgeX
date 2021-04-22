@@ -1,8 +1,6 @@
 package generator
 
 import (
-	"JudgeX/languages"
-	"JudgeX/utils"
 	"bytes"
 	"fmt"
 	"go/ast"
@@ -13,6 +11,9 @@ import (
 	"runtime"
 	"strings"
 	"text/template"
+
+	"github.com/Judgoo/JudgeX/languages"
+	"github.com/Judgoo/JudgeX/utils"
 
 	"github.com/Masterminds/sprig"
 	"github.com/pkg/errors"

@@ -1,4 +1,4 @@
-module JudgeX
+module github.com/Judgoo/JudgeX
 
 go 1.16
 
@@ -20,10 +20,10 @@ require (
 	github.com/mitchellh/copystructure v1.1.2 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/zeebo/blake3 v0.1.1
-	go.uber.org/zap v1.16.0 // indirect
+	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc // indirect
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/sys v0.0.0-20210415045647-66c3f260301c // indirect
+	golang.org/x/sys v0.0.0-20210421221651-33663a62ff08 // indirect
 	golang.org/x/tools v0.1.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0

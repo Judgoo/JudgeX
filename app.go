@@ -1,9 +1,10 @@
 package main
 
 import (
-	"JudgeX/api"
-	"JudgeX/server"
 	"log"
+
+	"github.com/Judgoo/JudgeX/api"
+	"github.com/Judgoo/JudgeX/server"
 
 	"github.com/joho/godotenv"
 )

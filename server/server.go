@@ -1,10 +1,11 @@
 package server
 
 import (
-	"JudgeX/pkg"
-	xUtils "JudgeX/utils"
 	"fmt"
 	"os"
+
+	"github.com/Judgoo/JudgeX/pkg"
+	xUtils "github.com/Judgoo/JudgeX/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"

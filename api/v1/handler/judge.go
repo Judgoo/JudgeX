@@ -1,10 +1,6 @@
 package handler
 
 import (
-	"JudgeX/api/v1/entities"
-	"JudgeX/languages"
-	pkg "JudgeX/pkg"
-	xUtils "JudgeX/utils"
 	"encoding/hex"
 	"fmt"
 	"math/rand"
@@ -14,6 +10,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Judgoo/JudgeX/api/v1/entities"
+	"github.com/Judgoo/JudgeX/languages"
+	pkg "github.com/Judgoo/JudgeX/pkg"
+	xUtils "github.com/Judgoo/JudgeX/utils"
 
 	judger "github.com/Judgoo/Judger/entities"
 	"github.com/gofiber/fiber/v2"

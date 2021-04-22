@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"JudgeX/languages"
+	"github.com/Judgoo/JudgeX/languages"
 
 	"github.com/gofiber/fiber/v2"
 )

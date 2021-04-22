@@ -1,9 +1,6 @@
 package main
 
 import (
-	"JudgeX/languages"
-	"JudgeX/languages/generate/generator"
-	"JudgeX/utils"
 	"bytes"
 	"fmt"
 	"html/template"
@@ -12,6 +9,10 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/Judgoo/JudgeX/languages"
+	"github.com/Judgoo/JudgeX/languages/generate/generator"
+	"github.com/Judgoo/JudgeX/utils"
 
 	"github.com/goccy/go-yaml"
 	"github.com/labstack/gommon/color"
