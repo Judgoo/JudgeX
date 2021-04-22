@@ -147,14 +147,14 @@ func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageI
 	rand.Seed(time.Now().UnixNano())
 
 	hashCh := make(chan string)
-	go func(content string) {
+	go func(content *string) {
 		hasher := blake3.New()
-		hasher.Write([]byte(content))
+		hasher.Write([]byte(*content))
 		hasher.Write([]byte(strconv.FormatInt(time.Now().Unix(), 10)))
 		hashCh <- hex.EncodeToString(hasher.Sum(nil))
-	}(data.Code)
+	}(&data.Code)
 	codeHash := <-hashCh
-
+	fmt.Println(data.Code)
 	workPath := getWorkspacePath(data.ID, codeHash)
 	fmt.Println(workPath)
 	codeCh := make(chan error)
@@ -187,18 +187,28 @@ func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageI
 		return pkg.ApiAbortWithoutData(c, 400, testdataResult.Error.Error())
 	}
 	generateJudgerYml(workPath, data, languageInfo, &testdataResult.Result)
+	image := languageInfo.Version.ImageName
+	judgeCommand := fmt.Sprintf("docker run --rm -v %s:/workspace %s", workPath, image)
+	fmt.Println(judgeCommand)
+	stdout, stderr, code, err1 := xUtils.Exec(judgeCommand, workPath)
 	return c.JSON(struct {
-		Data     string
 		Language string
 		Version  string
 		Build    []string
 		Run      string
+		Stdout   string
+		Stderr   string
+		ExitCode int
+		Err      error
 	}{
-		Data:     "Hello, World!",
 		Language: languageInfo.Language.String(),
 		Version:  languageInfo.VersionName,
 		Build:    languageInfo.Language.Profile().Build,
 		Run:      languageInfo.Language.Profile().Run,
+		Stdout:   stdout,
+		Stderr:   stderr,
+		ExitCode: code,
+		Err:      err1,
 	})
 }
 
