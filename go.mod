@@ -3,10 +3,11 @@ module github.com/Judgoo/JudgeX
 go 1.16
 
 require (
-	github.com/Judgoo/Judger v0.0.0-20210416132509-b5cb2c7fd1c2
+	github.com/Judgoo/Judger v0.0.0-20210424172601-50419d9930be
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/go-cmd/cmd v1.3.0 // indirect
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/goccy/go-yaml v1.8.9
 	github.com/gofiber/fiber/v2 v2.7.1

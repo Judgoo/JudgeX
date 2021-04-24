@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -13,8 +14,10 @@ import (
 
 	"github.com/Judgoo/JudgeX/api/v1/entities"
 	"github.com/Judgoo/JudgeX/languages"
+	"github.com/Judgoo/JudgeX/logger"
 	pkg "github.com/Judgoo/JudgeX/pkg"
 	xUtils "github.com/Judgoo/JudgeX/utils"
+	"github.com/go-cmd/cmd"
 
 	judger "github.com/Judgoo/Judger/entities"
 	"github.com/gofiber/fiber/v2"
@@ -25,7 +28,7 @@ import (
 )
 
 type LanguageInfo struct {
-	Language    languages.LanguageType
+	Language    *languages.LanguageType
 	VersionName string
 	Version     *languages.VersionInfo
 }
@@ -116,10 +119,11 @@ func processTestData(workPath string, data *entities.JudgePostData) TestDataResu
 	return <-tdCh
 }
 
-func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *LanguageInfo, testdataEntrys *TestDataEntrys) error {
+func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *LanguageInfo, testdataEntrys *TestDataEntrys) (*judger.IJudger, error) {
 	lang := languageInfo.Language
 	langProfile := lang.Profile()
-	var judger = judger.IJudger{
+	judgeCommand := fmt.Sprintf("docker run --rm -v %s:/workspace %s", workPath, languageInfo.Version.ImageName)
+	var judgerStruct = judger.IJudger{
 		Language: lang.String(),
 		Build:    langProfile.Build,
 		Run:      langProfile.Run,
@@ -128,18 +132,39 @@ func generateJudgerYml(workPath string, data *entities.JudgePostData, languageIn
 			Memory:  int(data.MemoryLimit),
 			Mco:     langProfile.Mco,
 		},
-		TestData: *testdataEntrys,
+		TestData:     *testdataEntrys,
+		DockerRunCmd: judgeCommand,
 	}
-	fileContent, err := yaml.Marshal(judger)
+	fileContent, err := yaml.Marshal(judgerStruct)
 	if err != nil {
-		return err
+		return new(judger.IJudger), err
 	}
 	file := &File{
 		Path:    filepath.Join(workPath, "judger.yml"),
 		Content: fileContent,
 	}
 
-	return WriteFile(file)
+	return &judgerStruct, WriteFile(file)
+}
+
+func execJudger(str string, dir string) *cmd.Status {
+	target := strings.Split(str, " ")
+	dockerCmd := cmd.NewCmd(target[0], target[1:]...)
+	if dir != "" {
+		dockerCmd.Dir = dir
+	}
+	statusChan := dockerCmd.Start() // non-blocking
+
+	// 3 分钟后杀死进程
+	go func() {
+		<-time.After(3 * time.Minute)
+		fmt.Printf("stop docker cmd")
+		dockerCmd.Stop()
+	}()
+
+	// Block waiting for command to exit, be stopped, or be killed
+	finalStatus := <-statusChan
+	return &finalStatus
 }
 
 func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageInfo) error {
@@ -154,7 +179,6 @@ func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageI
 		hashCh <- hex.EncodeToString(hasher.Sum(nil))
 	}(&data.Code)
 	codeHash := <-hashCh
-	fmt.Println(data.Code)
 	workPath := getWorkspacePath(data.ID, codeHash)
 	fmt.Println(workPath)
 	codeCh := make(chan error)
@@ -186,30 +210,62 @@ func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageI
 		}
 		return pkg.ApiAbortWithoutData(c, 400, testdataResult.Error.Error())
 	}
-	generateJudgerYml(workPath, data, languageInfo, &testdataResult.Result)
-	image := languageInfo.Version.ImageName
-	judgeCommand := fmt.Sprintf("docker run --rm -v %s:/workspace %s", workPath, image)
-	fmt.Println(judgeCommand)
-	stdout, stderr, code, err1 := xUtils.Exec(judgeCommand, workPath)
-	return c.JSON(struct {
-		Language string
-		Version  string
-		Build    []string
-		Run      string
-		Stdout   string
-		Stderr   string
-		ExitCode int
-		Err      error
-	}{
-		Language: languageInfo.Language.String(),
-		Version:  languageInfo.VersionName,
-		Build:    languageInfo.Language.Profile().Build,
-		Run:      languageInfo.Language.Profile().Run,
-		Stdout:   stdout,
-		Stderr:   stderr,
-		ExitCode: code,
-		Err:      err1,
-	})
+	judgerResult, errG := generateJudgerYml(workPath, data, languageInfo, &testdataResult.Result)
+	if errG != nil {
+		return pkg.ApiAbort(c, 400, "生成 judger.yml 时出错", testdataResult.Error.Error())
+	}
+	cmdStatus := execJudger(judgerResult.DockerRunCmd, workPath)
+	if cmdStatus.Error != nil {
+		return pkg.ApiAbort(c, 400, "docker 运行出错", testdataResult.Error.Error())
+	}
+	if cmdStatus.Complete {
+		// 解析 Judger 的输出
+		result := new(judger.NormalResult)
+		stdout := strings.Join(cmdStatus.Stdout, "\n")
+		fmt.Printf(stdout)
+		err2 := json.Unmarshal([]byte(stdout), &result)
+		if err2 != nil {
+			// Judger 没有输出一个有效 JSON
+			// 说明 Judger 可能崩了
+			logger.Sugar.Infow("judger output is not json format", "stdout", stdout)
+			return pkg.ApiAbortWithoutData(c, 400, err.Error())
+		}
+		if cmdStatus.Exit != 0 {
+			// Judger 执行出错
+			switch result.Code {
+			case judger.CodeCompileError:
+				return pkg.ApiAbort(c, 400, "编译错误", result)
+			case judger.CodeRunnerRunError:
+				return pkg.ApiAbort(c, 400, "runner 执行用户代码报错", result)
+			case judger.CodeInitLoggerError:
+				return pkg.ApiAbort(c, 400, "Judger logger 报错", result)
+			case judger.CodeReadConfigFileError:
+				return pkg.ApiAbort(c, 400, "读取 judger.yml 出错", result)
+			case judger.CodeUserCodeRunnerRunError:
+				return pkg.ApiAbort(c, 400, "用户代码执行出错(用户的问题)", result)
+			default:
+				return pkg.ApiAbort(c, 400, "系统错误", result)
+			}
+		} else {
+			// 执行成功
+			return c.JSON(struct {
+				Language string
+				Version  string
+				Build    []string
+				Run      string
+				Result   *judger.NormalResult
+			}{
+				Language: languageInfo.Language.String(),
+				Version:  languageInfo.VersionName,
+				Build:    languageInfo.Language.Profile().Build,
+				Run:      languageInfo.Language.Profile().Run,
+				Result:   result,
+			})
+		}
+	} else {
+		// golang 在执行命令的时候出了问题, maybe I/O problem
+		return pkg.ApiAbort(c, 400, "JudgeX 内部出现错误", cmdStatus.Error.Error())
+	}
 }
 
 func JudgeLanguageByVersion(c *fiber.Ctx) error {
@@ -221,12 +277,12 @@ func JudgeLanguageByVersion(c *fiber.Ctx) error {
 
 	version := c.Params("version", "")
 
-	versionName, versionInfo, exists := language.GetVersion(version)
+	versionName, versionInfo, exists := language.GetVersionInfo(version)
 	if !exists {
 		return pkg.ApiAbort(c, fiber.StatusBadRequest, ErrorLanguageVersionNotFound.Error(), fmt.Sprintf("version %s not found in language %s", version, languageString))
 	}
 
-	languageInfo := LanguageInfo{Language: language, VersionName: versionName, Version: versionInfo}
+	languageInfo := LanguageInfo{Language: &language, VersionName: versionName, Version: versionInfo}
 
 	var requestBody entities.JudgePostData
 	err = xUtils.ParseJSONBody(c, &requestBody)

@@ -32,6 +32,6 @@ var LanguageData []byte
 var ProfileMap = make(LanguageProfileMap)
 var _ = yaml.Unmarshal(LanguageData, &ProfileMap)
 
-func (lang LanguageType) Profile() *LanguageProfile {
+func (lang *LanguageType) Profile() *LanguageProfile {
 	return ProfileMap[lang.String()]
 }

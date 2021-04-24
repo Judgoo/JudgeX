@@ -10,6 +10,7 @@ import (
 var JSON = jsoniter.Config{
 	EscapeHTML:              false,
 	MarshalFloatWith6Digits: true,
+	SortMapKeys:             true,
 }.Froze()
 
 func ParseJSONBody(c *fiber.Ctx, out interface{}) error {
