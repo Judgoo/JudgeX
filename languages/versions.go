@@ -137,7 +137,7 @@ var VersionNameMap = map[LanguageType][]string{
 	Java:       {"openjdk8", "openjdk11"},
 	JavaScript: {"nodejs14"},
 	Julia:      {"julia1.6"},
-	Kotlin:     {"kotlin1.42"},
+	Kotlin:     {"kotlin1.4"},
 	Lua:        {"lua"},
 	Ocaml:      {"ocaml"},
 	Perl:       {"perl"},
@@ -145,8 +145,8 @@ var VersionNameMap = map[LanguageType][]string{
 	Python:     {"python3.9", "python2.7"},
 	Ruby:       {"ruby"},
 	Rust:       {"rust1.51"},
-	Scala:      {"scala"},
-	Swift:      {"swift5"},
+	Scala:      {"scala2.13"},
+	Swift:      {"swift5.3"},
 	TypeScript: {"typescript"},
 }
 
