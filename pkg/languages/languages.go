@@ -4,8 +4,6 @@ package languages
 
 import (
 	_ "embed"
-
-	"gopkg.in/yaml.v2"
 )
 
 type LanguageType int
@@ -27,11 +25,8 @@ type LanguageProfile struct {
 
 type LanguageProfileMap map[string]*LanguageProfile
 
-//go:embed languages_impl.yml
-var LanguageData []byte
-var ProfileMap = make(LanguageProfileMap)
-var _ = yaml.Unmarshal(LanguageData, &ProfileMap)
-
-func (lang *LanguageType) Profile() *LanguageProfile {
-	return ProfileMap[lang.String()]
+type LanguageInfo struct {
+	Language    *LanguageType
+	VersionName string
+	Version     *VersionInfo
 }

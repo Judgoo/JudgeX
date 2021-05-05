@@ -4,29 +4,39 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Judgoo/JudgeX/pkg"
+	v1 "github.com/Judgoo/JudgeX/api/v1/routes"
+	"github.com/Judgoo/JudgeX/pkg/api"
+	"github.com/Judgoo/JudgeX/pkg/languages"
 	xUtils "github.com/Judgoo/JudgeX/utils"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/etag"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/gofiber/helmet/v2"
 )
 
 func setupMiddlewares(app *fiber.App) {
-	app.Use(helmet.New())
 	app.Use(recover.New())
-	app.Use(cors.New())
-	app.Use(compress.New(compress.Config{
-		Level: compress.LevelBestSpeed, // 1
-	}))
-	app.Use(etag.New())
-	app.Use(logger.New())
-	app.Use(requestid.New())
+	// app.Use(compress.New(compress.Config{
+	// 	Level: compress.LevelBestSpeed, // 1
+	// }))
+	// w, err := os.OpenFile("./judgex-access.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	// if err != nil {
+	// 	fmt.Printf("error opening file: %v", err)
+	// 	os.Exit(1)
+	// }
+
+	// app.Use(logger.New(logger.Config{
+	// 	Output: w,
+	// }))
+}
+
+func registerRoutes(app *fiber.App) {
+	v1Route := app.Group("/v1", func(c *fiber.Ctx) error {
+		c.Set("X-Judge-Version", "v1")
+		return c.Next()
+	})
+	languageService := languages.NewService()
+	v1.JudgeRoutes(v1Route, languageService)
+	v1.LanguageRoutes(v1Route, languageService)
 }
 
 func registerBuiltinRoutes(app *fiber.App) {
@@ -37,19 +47,20 @@ func registerBuiltinRoutes(app *fiber.App) {
 
 func Create() *fiber.App {
 	app := fiber.New(fiber.Config{
-		Prefork:      false,
+		Prefork:      true,
 		ServerHeader: "JudgeX 0.0.1",
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			if e, ok := err.(*fiber.Error); ok {
-				return pkg.ApiAbort(c, e.Code, e.Message, e.Error())
+				return api.ApiAbort(c, e.Code, e.Message, e.Error())
 			} else {
-				return pkg.ApiAbortWithoutData(c, 500, err.Error())
+				return api.ApiAbortWithoutData(c, 500, err.Error())
 			}
 		},
 		JSONEncoder: xUtils.JSONMarshal,
 	})
 
 	setupMiddlewares(app)
+	registerRoutes(app)
 	registerBuiltinRoutes(app)
 
 	app.Get("/", func(c *fiber.Ctx) error {

@@ -3,7 +3,7 @@ package languages_test
 import (
 	"testing"
 
-	"github.com/Judgoo/JudgeX/languages"
+	"github.com/Judgoo/JudgeX/pkg/languages"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -1,9 +1,11 @@
-package handler
+package languages
 
 import (
+	_ "embed"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"path"
@@ -12,25 +14,78 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Judgoo/JudgeX/api/v1/entities"
-	"github.com/Judgoo/JudgeX/languages"
 	"github.com/Judgoo/JudgeX/logger"
-	pkg "github.com/Judgoo/JudgeX/pkg"
-	xUtils "github.com/Judgoo/JudgeX/utils"
+	"github.com/Judgoo/JudgeX/pkg/api"
+	"github.com/Judgoo/JudgeX/pkg/entities"
 	"github.com/go-cmd/cmd"
-
-	judger "github.com/Judgoo/Judger/entities"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/utils"
 	"github.com/pkg/errors"
 	"github.com/zeebo/blake3"
 	"gopkg.in/yaml.v2"
+
+	xUtils "github.com/Judgoo/JudgeX/utils"
+
+	judger "github.com/Judgoo/Judger/entities"
 )
 
-type LanguageInfo struct {
-	Language    *languages.LanguageType
-	VersionName string
-	Version     *languages.VersionInfo
+type JudgeResponse struct {
+	Language string
+	Version  string
+	Build    []string
+	Run      string
+	Result   *judger.NormalResult
+}
+
+type languageInfoDisplay struct {
+	VersionName string `json:"version"`
+	DisplayName string `json:"name"`
+	Description string `json:"description"`
+}
+
+type languageInfoMap map[string][]languageInfoDisplay
+
+type Service interface {
+	GetLanguages() languageInfoMap
+	GetLangProfile(*LanguageType) *LanguageProfile
+	Judge(c *fiber.Ctx, data *entities.JudgePostData, lt *LanguageType, versionStr string) (*JudgeResponse, error)
+}
+
+type service struct {
+	ProfileMap *LanguageProfileMap
+}
+
+//go:embed languages_impl.yml
+var LanguageData []byte
+
+func NewService() Service {
+	var profileMap = new(LanguageProfileMap)
+	var err = yaml.Unmarshal(LanguageData, profileMap)
+	if err != nil {
+		log.Fatalf("err when load languages: %v", err)
+	}
+	return &service{
+		ProfileMap: profileMap,
+	}
+}
+
+func (s *service) GetLanguages() languageInfoMap {
+	var result = languageInfoMap{}
+	for lang, vs := range VersionNameMap {
+		result[lang.String()] = make([]languageInfoDisplay, 0)
+		for _, versionName := range vs {
+			versionInfo := VersionInfos[versionName]
+			result[lang.String()] = append(result[lang.String()], languageInfoDisplay{
+				versionName,
+				fmt.Sprintf("%s(%s)", lang.String(), versionInfo.DisplayName),
+				versionInfo.Description,
+			})
+		}
+	}
+	return result
+}
+
+func (s *service) GetLangProfile(lang *LanguageType) *LanguageProfile {
+	return (*s.ProfileMap)[lang.String()]
 }
 
 type File struct {
@@ -119,9 +174,8 @@ func processTestData(workPath string, data *entities.JudgePostData) TestDataResu
 	return <-tdCh
 }
 
-func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *LanguageInfo, testdataEntrys *TestDataEntrys) (*judger.IJudger, error) {
+func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *LanguageInfo, testdataEntrys *TestDataEntrys, langProfile *LanguageProfile) (*judger.IJudger, error) {
 	lang := languageInfo.Language
-	langProfile := lang.Profile()
 	judgeCommand := fmt.Sprintf("docker run --rm -v %s:/workspace %s", workPath, languageInfo.Version.ImageName)
 	var judgerStruct = judger.IJudger{
 		Language: lang.String(),
@@ -167,9 +221,16 @@ func execJudger(str string, dir string) *cmd.Status {
 	return &finalStatus
 }
 
-func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageInfo) error {
+func (s *service) Judge(c *fiber.Ctx, data *entities.JudgePostData, lt *LanguageType, versionStr string) (*JudgeResponse, error) {
 	// 设置随机种子
 	rand.Seed(time.Now().UnixNano())
+	versionName, versionInfo, exists := lt.GetVersionInfo(versionStr)
+	if !exists {
+		return &JudgeResponse{}, ErrorLanguageVersionNotFound
+	}
+	languageInfo := LanguageInfo{Language: lt, VersionName: versionName, Version: versionInfo}
+
+	langProfile := s.GetLangProfile(languageInfo.Language)
 
 	hashCh := make(chan string)
 	go func(content *string) {
@@ -187,7 +248,7 @@ func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageI
 			codeCh <- ErrorEmptyCode
 		}
 		file := &File{
-			filepath.Join(workPath, languageInfo.Language.Profile().Filename),
+			filepath.Join(workPath, langProfile.Filename),
 			[]byte(data.Code),
 		}
 		codeCh <- WriteFile(file)
@@ -198,7 +259,7 @@ func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageI
 		case ErrorEmptyCode:
 		default:
 		}
-		return pkg.ApiAbortWithoutData(c, 400, err.Error())
+		return &JudgeResponse{}, api.ApiAbortWithoutData(c, 400, err.Error())
 
 	}
 	testdataResult := processTestData(workPath, data)
@@ -208,90 +269,55 @@ func doJudge(c *fiber.Ctx, data *entities.JudgePostData, languageInfo *LanguageI
 		case ErrorTestDataLengthNotEqual:
 		default:
 		}
-		return pkg.ApiAbortWithoutData(c, 400, testdataResult.Error.Error())
+		return &JudgeResponse{}, api.ApiAbortWithoutData(c, 400, testdataResult.Error.Error())
 	}
-	judgerResult, errG := generateJudgerYml(workPath, data, languageInfo, &testdataResult.Result)
+	judgerResult, errG := generateJudgerYml(workPath, data, &languageInfo, &testdataResult.Result, langProfile)
 	if errG != nil {
-		return pkg.ApiAbort(c, 400, "生成 judger.yml 时出错", testdataResult.Error.Error())
+		return &JudgeResponse{}, api.ApiAbort(c, 400, "生成 judger.yml 时出错", testdataResult.Error.Error())
 	}
 	cmdStatus := execJudger(judgerResult.DockerRunCmd, workPath)
 	if cmdStatus.Error != nil {
-		return pkg.ApiAbort(c, 400, "docker 运行出错", testdataResult.Error.Error())
+		return &JudgeResponse{}, api.ApiAbort(c, 400, "docker 运行出错", testdataResult.Error.Error())
 	}
 	if cmdStatus.Complete {
 		// 解析 Judger 的输出
 		result := new(judger.NormalResult)
 		stdout := strings.Join(cmdStatus.Stdout, "\n")
-		fmt.Printf(stdout)
+		fmt.Println(stdout)
 		err2 := json.Unmarshal([]byte(stdout), &result)
 		if err2 != nil {
 			// Judger 没有输出一个有效 JSON
 			// 说明 Judger 可能崩了
 			logger.Sugar.Infow("judger output is not json format", "stdout", stdout)
-			return pkg.ApiAbortWithoutData(c, 400, err.Error())
+			return &JudgeResponse{}, api.ApiAbortWithoutData(c, 400, err.Error())
 		}
 		if cmdStatus.Exit != 0 {
 			// Judger 执行出错
 			switch result.Code {
 			case judger.CodeCompileError:
-				return pkg.ApiAbort(c, 400, "编译错误", result)
+				return &JudgeResponse{}, api.ApiAbort(c, 400, "编译错误", result)
 			case judger.CodeRunnerRunError:
-				return pkg.ApiAbort(c, 400, "runner 执行用户代码报错", result)
+				return &JudgeResponse{}, api.ApiAbort(c, 400, "runner 执行用户代码报错", result)
 			case judger.CodeInitLoggerError:
-				return pkg.ApiAbort(c, 400, "Judger logger 报错", result)
+				return &JudgeResponse{}, api.ApiAbort(c, 400, "Judger logger 报错", result)
 			case judger.CodeReadConfigFileError:
-				return pkg.ApiAbort(c, 400, "读取 judger.yml 出错", result)
+				return &JudgeResponse{}, api.ApiAbort(c, 400, "读取 judger.yml 出错", result)
 			case judger.CodeUserCodeRunnerRunError:
-				return pkg.ApiAbort(c, 400, "用户代码执行出错(用户的问题)", result)
+				return &JudgeResponse{}, api.ApiAbort(c, 400, "用户代码执行出错(用户的问题)", result)
 			default:
-				return pkg.ApiAbort(c, 400, "系统错误", result)
+				return &JudgeResponse{}, api.ApiAbort(c, 400, "系统错误", result)
 			}
-		} else {
-			// 执行成功
-			return c.JSON(struct {
-				Language string
-				Version  string
-				Build    []string
-				Run      string
-				Result   *judger.NormalResult
-			}{
-				Language: languageInfo.Language.String(),
-				Version:  languageInfo.VersionName,
-				Build:    languageInfo.Language.Profile().Build,
-				Run:      languageInfo.Language.Profile().Run,
-				Result:   result,
-			})
 		}
+		// 执行成功
+		return &JudgeResponse{
+			Language: languageInfo.Language.String(),
+			Version:  languageInfo.VersionName,
+			Build:    langProfile.Build,
+			Run:      langProfile.Run,
+			Result:   result,
+		}, nil
 	} else {
 		// golang 在执行命令的时候出了问题, maybe I/O problem
-		return pkg.ApiAbort(c, 400, "JudgeX 内部出现错误", cmdStatus.Error.Error())
+		return &JudgeResponse{}, api.ApiAbort(c, 400, "JudgeX 内部出现错误", cmdStatus.Error.Error())
 	}
-}
-
-func JudgeLanguageByVersion(c *fiber.Ctx) error {
-	languageString := utils.CopyString(c.Params("language"))
-	language, err := languages.ParseLanguageType(languageString)
-	if err != nil {
-		return pkg.ApiAbortWithoutData(c, fiber.StatusBadRequest, err.Error())
-	}
-
-	version := c.Params("version", "")
-
-	versionName, versionInfo, exists := language.GetVersionInfo(version)
-	if !exists {
-		return pkg.ApiAbort(c, fiber.StatusBadRequest, ErrorLanguageVersionNotFound.Error(), fmt.Sprintf("version %s not found in language %s", version, languageString))
-	}
-
-	languageInfo := LanguageInfo{Language: &language, VersionName: versionName, Version: versionInfo}
-
-	var requestBody entities.JudgePostData
-	err = xUtils.ParseJSONBody(c, &requestBody)
-	if err != nil {
-		return pkg.ApiAbort(c, fiber.StatusBadRequest, "Parse JSON Body Error", err.Error())
-	}
-	validationErrors := entities.Validate(requestBody)
-	if validationErrors != nil {
-		return pkg.ApiAbort(c, fiber.StatusUnprocessableEntity, "Validation Error", validationErrors)
-	}
-	return doJudge(c, &requestBody, &languageInfo)
 }

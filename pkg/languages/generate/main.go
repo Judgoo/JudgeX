@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/Judgoo/JudgeX/languages"
-	"github.com/Judgoo/JudgeX/languages/generate/generator"
+	"github.com/Judgoo/JudgeX/pkg/languages"
+	"github.com/Judgoo/JudgeX/pkg/languages/generate/generator"
 	"github.com/Judgoo/JudgeX/utils"
 
 	"github.com/goccy/go-yaml"

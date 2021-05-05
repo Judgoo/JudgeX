@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Judgoo/JudgeX/languages"
+	"github.com/Judgoo/JudgeX/pkg/languages"
 	"github.com/Judgoo/JudgeX/utils"
 
 	"github.com/Masterminds/sprig"
