@@ -4,6 +4,9 @@ package languages
 
 import (
 	_ "embed"
+	"log"
+
+	"gopkg.in/yaml.v2"
 )
 
 type LanguageType int
@@ -29,4 +32,16 @@ type LanguageInfo struct {
 	Language    *LanguageType
 	VersionName string
 	Version     *VersionInfo
+}
+
+//go:embed languages_impl.yml
+var LanguageData []byte
+
+var ProfileMap = new(LanguageProfileMap)
+
+func init() {
+	var err = yaml.Unmarshal(LanguageData, ProfileMap)
+	if err != nil {
+		log.Fatalf("err when load languages: %v", err)
+	}
 }

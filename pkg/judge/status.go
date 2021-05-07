@@ -1,8 +1,8 @@
-package languages
+package judge
 
 import judger "github.com/Judgoo/Judger/entities"
 
-var StatusInfos = map[judger.RunnerStatus]string{
+var StatusInfos = &map[judger.RunnerStatus]string{
 	// 还未执行答案检查
 	judger.PENDING: "PENDING",
 	// 答案正确
@@ -24,5 +24,5 @@ var StatusInfos = map[judger.RunnerStatus]string{
 }
 
 func GetStatusInfo(rs judger.RunnerStatus) string {
-	return StatusInfos[rs]
+	return (*StatusInfos)[rs]
 }

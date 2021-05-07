@@ -7,7 +7,7 @@ import (
 	v1 "github.com/Judgoo/JudgeX/api/v1/routes"
 	"github.com/Judgoo/JudgeX/pkg/api"
 	"github.com/Judgoo/JudgeX/pkg/flake"
-	"github.com/Judgoo/JudgeX/pkg/languages"
+	"github.com/Judgoo/JudgeX/pkg/judge"
 	xUtils "github.com/Judgoo/JudgeX/utils"
 
 	"github.com/gofiber/fiber/v2"
@@ -30,9 +30,9 @@ func registerRoutes(app *fiber.App) {
 		c.Set("X-Judge-Version", "v1")
 		return c.Next()
 	})
-	languageService := languages.NewService()
-	v1.JudgeRoutes(v1Route, languageService)
-	v1.LanguageRoutes(v1Route, languageService)
+	judgeService := judge.NewService()
+	v1.JudgeRoutes(v1Route, judgeService)
+	v1.LanguageRoutes(v1Route, judgeService)
 }
 
 func registerBuiltinRoutes(app *fiber.App) {

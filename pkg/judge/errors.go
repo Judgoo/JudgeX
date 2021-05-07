@@ -1,4 +1,4 @@
-package languages
+package judge
 
 import "github.com/pkg/errors"
 

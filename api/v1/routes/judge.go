@@ -7,6 +7,7 @@ import (
 	"github.com/Judgoo/JudgeX/pkg/api"
 	"github.com/Judgoo/JudgeX/pkg/constants"
 	"github.com/Judgoo/JudgeX/pkg/entities"
+	"github.com/Judgoo/JudgeX/pkg/judge"
 	"github.com/Judgoo/JudgeX/pkg/languages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
@@ -14,11 +15,11 @@ import (
 	xUtils "github.com/Judgoo/JudgeX/utils"
 )
 
-func JudgeRoutes(route fiber.Router, service languages.Service) {
+func JudgeRoutes(route fiber.Router, service judge.Service) {
 	route.Post("/judge/:language/:version?", judgeLanguageByVersion(service))
 }
 
-func judgeLanguageByVersion(service languages.Service) fiber.Handler {
+func judgeLanguageByVersion(service judge.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		languageString := utils.CopyString(c.Params("language"))
 		lt, err := languages.ParseLanguageType(languageString)
