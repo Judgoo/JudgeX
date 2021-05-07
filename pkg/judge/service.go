@@ -258,10 +258,12 @@ type ExecJudgerArg struct {
 var p *ants.PoolWithFunc
 
 func init() {
-	p, _ = ants.NewPoolWithFunc(100, func(i interface{}) {
+	p, _ = ants.NewPoolWithFunc(6, func(i interface{}) {
 		c := i.(*ExecJudgerArg)
+		fmt.Printf("WorkPath %s\n", c.WorkPath)
+		fmt.Printf("Cmd %s\n", c.Cmd)
 		c.Ch <- execJudger(c.Cmd, c.WorkPath)
-	}, ants.WithExpiryDuration(3*time.Minute))
+	}, ants.WithExpiryDuration(2*time.Minute), ants.WithNonblocking(true))
 }
 
 func Release() {

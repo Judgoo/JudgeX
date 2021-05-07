@@ -3,7 +3,7 @@ module github.com/Judgoo/JudgeX
 go 1.16
 
 require (
-	github.com/Judgoo/Judger v0.0.0-20210424172601-50419d9930be
+	github.com/Judgoo/Judger v0.0.0-20210507174822-46e2551b6760
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
@@ -23,6 +23,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
 	github.com/zeebo/blake3 v0.1.1
+	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc // indirect
 	golang.org/x/mod v0.4.2 // indirect
