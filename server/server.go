@@ -17,23 +17,12 @@ import (
 
 func setupMiddlewares(app *fiber.App) {
 	app.Use(recover.New())
-	// app.Use(compress.New(compress.Config{
-	// 	Level: compress.LevelBestSpeed, // 1
-	// }))
-	// w, err := os.OpenFile("./judgex-access.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-	// if err != nil {
-	// 	fmt.Printf("error opening file: %v", err)
-	// 	os.Exit(1)
-	// }
 	app.Use(requestid.New(requestid.Config{
 		Next:       nil,
 		Header:     fiber.HeaderXRequestID,
 		Generator:  flake.Digest,
 		ContextKey: "requestid",
 	}))
-	// app.Use(logger.New(logger.Config{
-	// 	Output: w,
-	// }))
 }
 
 func registerRoutes(app *fiber.App) {

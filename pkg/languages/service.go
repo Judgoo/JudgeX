@@ -12,10 +12,8 @@ import (
 	"time"
 
 	"github.com/Judgoo/JudgeX/logger"
-	"github.com/Judgoo/JudgeX/pkg/api"
 	"github.com/Judgoo/JudgeX/pkg/entities"
 	"github.com/go-cmd/cmd"
-	"github.com/gofiber/fiber/v2"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
@@ -62,7 +60,7 @@ type languageInfoMap map[string][]languageInfoDisplay
 type Service interface {
 	GetLanguages() languageInfoMap
 	GetLangProfile(*LanguageType) *LanguageProfile
-	Judge(c *fiber.Ctx, id string, data *entities.JudgePostData, lt *LanguageType, versionStr string) (*JudgeResponse, error)
+	Judge(requestid string, data *entities.JudgePostData, li *LanguageInfo) (*JudgeResponse, error)
 }
 
 type service struct {
@@ -72,12 +70,16 @@ type service struct {
 //go:embed languages_impl.yml
 var LanguageData []byte
 
-func NewService() Service {
-	var profileMap = new(LanguageProfileMap)
+var profileMap = new(LanguageProfileMap)
+
+func init() {
 	var err = yaml.Unmarshal(LanguageData, profileMap)
 	if err != nil {
 		log.Fatalf("err when load languages: %v", err)
 	}
+}
+
+func NewService() Service {
 	return &service{
 		ProfileMap: profileMap,
 	}
@@ -108,27 +110,17 @@ type File struct {
 	Content []byte
 }
 
-var ErrorEmptyCode = errors.New("code is empty")
-var ErrorTestDataLengthNotEqual = errors.New("length of inputs and outputs are not equal")
-var ErrorTestDataEmpty = errors.New("no testdata found")
-var ErrorLanguageVersionNotFound = errors.New("version not found")
-
-var ErrorJudgerError = errors.New("系统错误")
-
-var StatusRuntimeError = errors.New("RUNTIME ERROR")
-
-func getWorkspacePath(id string, hash string) string {
+func getWorkspacePath(id string, requestid string) string {
 	// 也许可以换成专业的文件系统来做这件事
 	// 文件夹分层 b6eec00f2b9335ece97f7a8f8b2cfeb1 -> b6/ee/b6eec00f2b9335ece97f7a8f8b2cfeb1
-	folder1 := hash[:2]
-	folder2 := hash[2:4]
-	prefix := hash[:32]
+	folder1 := requestid[:2]
+	folder2 := requestid[2:4]
+	prefix := requestid[:32]
 
 	// TODO `JudgeWorkspace` 这个换成放在设置项中的可配置的
 	workDir := filepath.Join(os.TempDir(), "JudgeWorkspace", folder1, folder2)
 	// 这样构造是因为这个 id 是需要返回到用户的，之后我们可以通过这个 ID 找到本次判题究竟存在哪儿
-	folderName := fmt.Sprintf("%s-%s", prefix, id)
-	return path.Join(workDir, folderName)
+	return path.Join(workDir, fmt.Sprintf("%s-%s", prefix, id))
 }
 
 func WriteFile(file *File) error {
@@ -145,12 +137,6 @@ type TestDataEntrys = []string
 func writeTestData(workPath string, data *entities.JudgePostData) (TestData, TestDataEntrys, error) {
 	inputs := data.Inputs
 	outputs := data.Outputs
-	if len(inputs) != len(outputs) {
-		return nil, nil, ErrorTestDataLengthNotEqual
-	}
-	if len(inputs) == 0 {
-		return nil, nil, ErrorTestDataEmpty
-	}
 	testdata := make(TestData)
 	testdataEntrys := make(TestDataEntrys, 0, len(inputs)+1)
 	for i := range inputs {
@@ -207,6 +193,7 @@ func generateJudgerYml(workPath string, data *entities.JudgePostData, languageIn
 		},
 		TestData:     *testdataEntrys,
 		DockerRunCmd: judgeCommand,
+		DirectRun:    false,
 	}
 	fileContent, err := yaml.Marshal(judgerStruct)
 	if err != nil {
@@ -228,15 +215,28 @@ func execJudger(str string, dir string) *cmd.Status {
 	}
 	statusChan := dockerCmd.Start() // non-blocking
 
-	// 3 分钟后杀死进程
+	stopCh := make(chan struct{})
+	// 2 分钟后杀死进程
 	go func() {
-		<-time.After(3 * time.Minute)
-		fmt.Printf("stop docker cmd")
-		dockerCmd.Stop()
+		t := time.After(2 * time.Minute)
+		for {
+			// Check if command is done
+			select {
+			case <-stopCh:
+				fmt.Println("done cmd")
+				t = nil
+				return
+			case <-t:
+				fmt.Println("stop docker cmd")
+				dockerCmd.Stop()
+				return
+			}
+		}
 	}()
 
 	// Block waiting for command to exit, be stopped, or be killed
 	finalStatus := <-statusChan
+	close(stopCh)
 	return &finalStatus
 }
 
@@ -263,51 +263,34 @@ func judgeJudgerErrorResult(result *judger.NormalResult, response *JudgeResponse
 	}
 }
 
-func (s *service) Judge(c *fiber.Ctx, id string, data *entities.JudgePostData, lt *LanguageType, versionStr string) (*JudgeResponse, error) {
-	versionName, versionInfo, exists := lt.GetVersionInfo(versionStr)
-	if !exists {
-		return &JudgeResponse{}, ErrorLanguageVersionNotFound
-	}
-	languageInfo := LanguageInfo{Language: lt, VersionName: versionName, Version: versionInfo}
+func (s *service) Judge(requestid string, data *entities.JudgePostData, languageInfo *LanguageInfo) (*JudgeResponse, error) {
 	langProfile := s.GetLangProfile(languageInfo.Language)
-
-	workPath := getWorkspacePath(data.ID, id)
+	workPath := getWorkspacePath(data.ID, requestid)
 	fmt.Println(workPath)
-	if strings.TrimSpace(data.Code) == "" {
-		return &JudgeResponse{}, ErrorEmptyCode
-	}
 	file := &File{
 		filepath.Join(workPath, langProfile.Filename),
 		[]byte(data.Code),
 	}
 	err := WriteFile(file)
 	if err != nil {
-		if err == ErrorEmptyCode {
-			return &JudgeResponse{}, api.ApiAbortWithoutData(c, 400, err.Error())
-		}
-		return &JudgeResponse{}, api.ApiAbortWithoutData(c, 400, err.Error())
+		return &JudgeResponse{}, err
 	}
 	testdataResult := processTestData(workPath, data)
 	if testdataResult.Error != nil {
-		switch errors.Cause(testdataResult.Error) {
-		case ErrorTestDataEmpty:
-		case ErrorTestDataLengthNotEqual:
-		default:
-		}
-		return &JudgeResponse{}, api.ApiAbortWithoutData(c, 400, testdataResult.Error.Error())
+		return &JudgeResponse{}, testdataResult.Error
 	}
-	judgerResult, errG := generateJudgerYml(workPath, data, &languageInfo, &testdataResult.Result, langProfile)
+	judgerResult, errG := generateJudgerYml(workPath, data, languageInfo, &testdataResult.Result, langProfile)
 	if errG != nil {
-		return &JudgeResponse{}, api.ApiAbort(c, 400, "生成 judger.yml 时出错", testdataResult.Error.Error())
+		return &JudgeResponse{}, errG
 	}
 	cmdStatus := execJudger(judgerResult.DockerRunCmd, workPath)
 	fmt.Printf("%#v", cmdStatus)
 	if cmdStatus.Error != nil {
-		return &JudgeResponse{}, api.ApiAbort(c, 400, "docker 运行出错", testdataResult.Error.Error())
+		return &JudgeResponse{}, cmdStatus.Error
 	}
 	if cmdStatus.Complete {
 		response := &JudgeResponse{
-			Id: id,
+			Id: requestid,
 			JudgerInfo: &JudgerInfo{
 				Language: languageInfo.Language.String(),
 				Version:  languageInfo.VersionName,
@@ -361,6 +344,6 @@ func (s *service) Judge(c *fiber.Ctx, id string, data *entities.JudgePostData, l
 		return response, nil
 	} else {
 		// golang 在执行命令的时候出了问题, maybe I/O problem
-		return &JudgeResponse{}, api.ApiAbort(c, 400, "JudgeX 内部出现错误", cmdStatus.Error.Error())
+		return &JudgeResponse{}, errors.WithMessage(cmdStatus.Error, "JudgeX 内部出现错误")
 	}
 }

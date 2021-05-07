@@ -2,8 +2,10 @@ package routes
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Judgoo/JudgeX/pkg/api"
+	"github.com/Judgoo/JudgeX/pkg/constants"
 	"github.com/Judgoo/JudgeX/pkg/entities"
 	"github.com/Judgoo/JudgeX/pkg/languages"
 	"github.com/gofiber/fiber/v2"
@@ -19,33 +21,44 @@ func JudgeRoutes(route fiber.Router, service languages.Service) {
 func judgeLanguageByVersion(service languages.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		languageString := utils.CopyString(c.Params("language"))
-		language, err := languages.ParseLanguageType(languageString)
+		lt, err := languages.ParseLanguageType(languageString)
 		if err != nil {
-			return api.ApiAbortWithoutData(c, fiber.StatusBadRequest, err.Error())
+			return api.ApiAbort(c, fiber.StatusBadRequest, constants.LANGUAGE_NOT_FOUND_ERROR, err.Error())
 		}
 
 		var requestBody entities.JudgePostData
 		err = xUtils.ParseJSONBody(c, &requestBody)
 		if err != nil {
-			return api.ApiAbort(c, fiber.StatusBadRequest, "Parse JSON Body Error", err.Error())
+			return api.ApiAbort(c, fiber.StatusBadRequest, constants.PARSE_BODY_ERROR, err.Error())
 		}
 		validationErrors := entities.Validate(requestBody)
 		if validationErrors != nil {
-			return api.ApiAbort(c, fiber.StatusUnprocessableEntity, "Validation Error", validationErrors)
+			return api.ApiAbort(c, fiber.StatusUnprocessableEntity, constants.VALIDATE_ERROR, validationErrors)
 		}
-		version := c.Params("version", "")
-		id := c.Locals("requestid").(string)
 
-		resp, judgeErr := service.Judge(c, id, &requestBody, &language, version)
+		_version := c.Params("version", "")
+		versionName, versionInfo, exists := lt.GetVersionInfo(_version)
+		if !exists {
+			return api.ApiAbort(c, fiber.StatusBadRequest, constants.VERSION_NOT_FOUND_ERROR, fmt.Sprintf("version %s not found in language %s", _version, languageString))
+		}
+		requestid := c.Locals("requestid").(string)
+		inputs := requestBody.Inputs
+		outputs := requestBody.Outputs
+		if len(inputs) == 0 {
+			return api.ApiAbort(c, fiber.StatusBadRequest, constants.NO_TESTDATA_ERROR, "no testdata found")
+		}
+		if len(inputs) != len(outputs) {
+			return api.ApiAbort(c, fiber.StatusBadRequest, constants.TESTDATA_LENGTH_ERROR, "length of inputs and outputs are not equal")
+		}
+		if strings.TrimSpace(requestBody.Code) == "" {
+			return api.ApiAbort(c, fiber.StatusBadRequest, constants.CODE_EMPTY_ERROR, "please input code")
+		}
+
+		languageInfo := languages.LanguageInfo{Language: &lt, VersionName: versionName, Version: versionInfo}
+
+		resp, judgeErr := service.Judge(requestid, &requestBody, &languageInfo)
 		if judgeErr != nil {
-			if judgeErr == languages.ErrorLanguageVersionNotFound {
-				return api.ApiAbort(c, fiber.StatusBadRequest, judgeErr.Error(), fmt.Sprintf("version %s not found in language %s", version, languageString))
-			}
-			if judgeErr == languages.ErrorEmptyCode {
-				return api.ApiAbort(c, fiber.StatusBadRequest, judgeErr.Error(), "please input code")
-			}
-			// 这里都看做返回的是 api.ApiAbort
-			return judgeErr
+			return api.ApiAbort(c, fiber.StatusBadRequest, constants.SYSTEM_ERROR, judgeErr.Error())
 		}
 		return api.NormalSuccess(c, resp)
 	}
