@@ -85,3 +85,7 @@ func Listen(app *fiber.App) error {
 
 	return app.Listen(fmt.Sprintf("%s:%s", serverHost, serverPort))
 }
+
+func Release() {
+	judge.Release()
+}

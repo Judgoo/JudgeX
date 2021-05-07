@@ -15,7 +15,7 @@ func main() {
 	}
 
 	app := server.Create()
-
+	defer server.Release()
 	if err := server.Listen(app); err != nil {
 		log.Panic(err)
 	}

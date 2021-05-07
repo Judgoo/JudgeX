@@ -7,11 +7,10 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/go-cmd/cmd v1.3.0 // indirect
+	github.com/go-cmd/cmd v1.3.0
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/goccy/go-yaml v1.8.9
 	github.com/gofiber/fiber/v2 v2.7.1
-	github.com/gofiber/helmet/v2 v2.1.1
 	github.com/google/uuid v1.2.0 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
@@ -19,9 +18,10 @@ require (
 	github.com/json-iterator/go v1.1.10
 	github.com/labstack/gommon v0.3.0
 	github.com/mitchellh/copystructure v1.1.2 // indirect
-	github.com/osamingo/indigo v1.1.0 // indirect
+	github.com/osamingo/indigo v1.1.0
+	github.com/panjf2000/ants/v2 v2.4.4
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/stretchr/testify v1.7.0
 	github.com/zeebo/blake3 v0.1.1
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc // indirect

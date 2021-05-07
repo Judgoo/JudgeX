@@ -14,6 +14,7 @@ import (
 	"github.com/Judgoo/JudgeX/pkg/entities"
 	"github.com/Judgoo/JudgeX/pkg/languages"
 	"github.com/go-cmd/cmd"
+	"github.com/panjf2000/ants/v2"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
@@ -248,6 +249,25 @@ func judgeJudgerErrorResult(result *judger.NormalResult, response *JudgeResponse
 	}
 }
 
+type ExecJudgerArg struct {
+	WorkPath string
+	Cmd      string
+	Ch       chan *cmd.Status
+}
+
+var p *ants.PoolWithFunc
+
+func init() {
+	p, _ = ants.NewPoolWithFunc(100, func(i interface{}) {
+		c := i.(*ExecJudgerArg)
+		c.Ch <- execJudger(c.Cmd, c.WorkPath)
+	}, ants.WithExpiryDuration(3*time.Minute))
+}
+
+func Release() {
+	p.Release()
+}
+
 func (s *service) Judge(requestid string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo) (*JudgeResponse, error) {
 	langProfile := s.GetLangProfile(languageInfo.Language)
 	workPath := getWorkspacePath(data.ID, requestid)
@@ -268,8 +288,14 @@ func (s *service) Judge(requestid string, data *entities.JudgePostData, language
 	if errG != nil {
 		return &JudgeResponse{}, errG
 	}
-	cmdStatus := execJudger(judgerResult.DockerRunCmd, workPath)
-	fmt.Printf("%#v", cmdStatus)
+	cmdCh := make(chan *cmd.Status)
+	p.Invoke(&ExecJudgerArg{
+		Ch:       cmdCh,
+		WorkPath: workPath,
+		Cmd:      judgerResult.DockerRunCmd,
+	})
+	cmdStatus := <-cmdCh
+	fmt.Printf("cmdStatus %#v", cmdStatus)
 	if cmdStatus.Error != nil {
 		return &JudgeResponse{}, cmdStatus.Error
 	}
@@ -286,7 +312,6 @@ func (s *service) Judge(requestid string, data *entities.JudgePostData, language
 		// 解析 Judger 的输出
 		result := new(judger.NormalResult)
 		stdout := strings.Join(cmdStatus.Stdout, "\n")
-		fmt.Println(stdout)
 		err2 := json.Unmarshal([]byte(stdout), &result)
 		if err2 != nil {
 			// Judger 没有输出一个有效 JSON
