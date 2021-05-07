@@ -2,15 +2,12 @@ package languages
 
 import (
 	_ "embed"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -20,7 +17,7 @@ import (
 	"github.com/go-cmd/cmd"
 	"github.com/gofiber/fiber/v2"
 	"github.com/pkg/errors"
-	"github.com/zeebo/blake3"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 
 	xUtils "github.com/Judgoo/JudgeX/utils"
@@ -28,12 +25,30 @@ import (
 	judger "github.com/Judgoo/Judger/entities"
 )
 
-type JudgeResponse struct {
+type JudgerInfo struct {
 	Language string
 	Version  string
 	Build    []string
 	Run      string
-	Result   *judger.NormalResult
+}
+type RunnerSuccessResult struct {
+	Status         *judger.RunnerStatus `json:"status"`
+	CpuTimeUsed    int                  `json:"cpu_time_used"`
+	CpuTimeUsedUs  int                  `json:"cpu_time_used_us"`
+	RealTimeUsed   int                  `json:"real_time_used"`
+	RealTimeUsedUs int                  `json:"real_time_used_us"`
+	MemoryUsed     int                  `json:"memory_used"`
+}
+type JudgeResponse struct {
+	Status     judger.RunnerStatus    `json:"status"`
+	StatusInfo string                 `json:"status_info"`
+	Result     []*RunnerSuccessResult `json:"result,omitempty"`
+	JudgerInfo *JudgerInfo            `json:"info,omitempty"`
+	Message    string                 `json:"message,omitempty"`
+	Stdout     string                 `json:"stdout,omitempty"`
+	Stderr     string                 `json:"stderr,omitempty"`
+	ExitCode   int                    `json:"exit_code,omitempty"`
+	Id         string                 `json:"id"`
 }
 
 type languageInfoDisplay struct {
@@ -47,7 +62,7 @@ type languageInfoMap map[string][]languageInfoDisplay
 type Service interface {
 	GetLanguages() languageInfoMap
 	GetLangProfile(*LanguageType) *LanguageProfile
-	Judge(c *fiber.Ctx, data *entities.JudgePostData, lt *LanguageType, versionStr string) (*JudgeResponse, error)
+	Judge(c *fiber.Ctx, id string, data *entities.JudgePostData, lt *LanguageType, versionStr string) (*JudgeResponse, error)
 }
 
 type service struct {
@@ -97,6 +112,10 @@ var ErrorEmptyCode = errors.New("code is empty")
 var ErrorTestDataLengthNotEqual = errors.New("length of inputs and outputs are not equal")
 var ErrorTestDataEmpty = errors.New("no testdata found")
 var ErrorLanguageVersionNotFound = errors.New("version not found")
+
+var ErrorJudgerError = errors.New("系统错误")
+
+var StatusRuntimeError = errors.New("RUNTIME ERROR")
 
 func getWorkspacePath(id string, hash string) string {
 	// 也许可以换成专业的文件系统来做这件事
@@ -221,46 +240,52 @@ func execJudger(str string, dir string) *cmd.Status {
 	return &finalStatus
 }
 
-func (s *service) Judge(c *fiber.Ctx, data *entities.JudgePostData, lt *LanguageType, versionStr string) (*JudgeResponse, error) {
-	// 设置随机种子
-	rand.Seed(time.Now().UnixNano())
+func judgeJudgerErrorResult(result *judger.NormalResult, response *JudgeResponse) {
+	if result.Code == judger.CodeSuccess {
+		return
+	}
+	response.Stdout = result.Stdout
+	response.Stderr = result.Stderr
+	// Judger 执行出错
+	switch result.Code {
+	case judger.CodeCompileError:
+		response.Status = judger.COMPILE_ERROR
+	case judger.CodeUserCodeRunnerRunError:
+		response.Status = judger.RUNTIME_ERROR
+	case judger.CodeInitLoggerError:
+		fallthrough
+	case judger.CodeNoInputDataError:
+		// TODO 这里需要优化
+		// 应该报错
+		fallthrough
+	default:
+		response.Status = judger.SYSTEM_ERROR
+	}
+}
+
+func (s *service) Judge(c *fiber.Ctx, id string, data *entities.JudgePostData, lt *LanguageType, versionStr string) (*JudgeResponse, error) {
 	versionName, versionInfo, exists := lt.GetVersionInfo(versionStr)
 	if !exists {
 		return &JudgeResponse{}, ErrorLanguageVersionNotFound
 	}
 	languageInfo := LanguageInfo{Language: lt, VersionName: versionName, Version: versionInfo}
-
 	langProfile := s.GetLangProfile(languageInfo.Language)
 
-	hashCh := make(chan string)
-	go func(content *string) {
-		hasher := blake3.New()
-		hasher.Write([]byte(*content))
-		hasher.Write([]byte(strconv.FormatInt(time.Now().Unix(), 10)))
-		hashCh <- hex.EncodeToString(hasher.Sum(nil))
-	}(&data.Code)
-	codeHash := <-hashCh
-	workPath := getWorkspacePath(data.ID, codeHash)
+	workPath := getWorkspacePath(data.ID, id)
 	fmt.Println(workPath)
-	codeCh := make(chan error)
-	go func() {
-		if strings.TrimSpace(data.Code) == "" {
-			codeCh <- ErrorEmptyCode
-		}
-		file := &File{
-			filepath.Join(workPath, langProfile.Filename),
-			[]byte(data.Code),
-		}
-		codeCh <- WriteFile(file)
-	}()
-	err := <-codeCh
+	if strings.TrimSpace(data.Code) == "" {
+		return &JudgeResponse{}, ErrorEmptyCode
+	}
+	file := &File{
+		filepath.Join(workPath, langProfile.Filename),
+		[]byte(data.Code),
+	}
+	err := WriteFile(file)
 	if err != nil {
-		switch errors.Cause(err) {
-		case ErrorEmptyCode:
-		default:
+		if err == ErrorEmptyCode {
+			return &JudgeResponse{}, api.ApiAbortWithoutData(c, 400, err.Error())
 		}
 		return &JudgeResponse{}, api.ApiAbortWithoutData(c, 400, err.Error())
-
 	}
 	testdataResult := processTestData(workPath, data)
 	if testdataResult.Error != nil {
@@ -276,10 +301,20 @@ func (s *service) Judge(c *fiber.Ctx, data *entities.JudgePostData, lt *Language
 		return &JudgeResponse{}, api.ApiAbort(c, 400, "生成 judger.yml 时出错", testdataResult.Error.Error())
 	}
 	cmdStatus := execJudger(judgerResult.DockerRunCmd, workPath)
+	fmt.Printf("%#v", cmdStatus)
 	if cmdStatus.Error != nil {
 		return &JudgeResponse{}, api.ApiAbort(c, 400, "docker 运行出错", testdataResult.Error.Error())
 	}
 	if cmdStatus.Complete {
+		response := &JudgeResponse{
+			Id: id,
+			JudgerInfo: &JudgerInfo{
+				Language: languageInfo.Language.String(),
+				Version:  languageInfo.VersionName,
+				Build:    langProfile.Build,
+				Run:      langProfile.Run,
+			},
+		}
 		// 解析 Judger 的输出
 		result := new(judger.NormalResult)
 		stdout := strings.Join(cmdStatus.Stdout, "\n")
@@ -289,33 +324,41 @@ func (s *service) Judge(c *fiber.Ctx, data *entities.JudgePostData, lt *Language
 			// Judger 没有输出一个有效 JSON
 			// 说明 Judger 可能崩了
 			logger.Sugar.Infow("judger output is not json format", "stdout", stdout)
-			return &JudgeResponse{}, api.ApiAbortWithoutData(c, 400, err.Error())
+			return &JudgeResponse{}, ErrorJudgerError
 		}
 		if cmdStatus.Exit != 0 {
-			// Judger 执行出错
-			switch result.Code {
-			case judger.CodeCompileError:
-				return &JudgeResponse{}, api.ApiAbort(c, 400, "编译错误", result)
-			case judger.CodeRunnerRunError:
-				return &JudgeResponse{}, api.ApiAbort(c, 400, "runner 执行用户代码报错", result)
-			case judger.CodeInitLoggerError:
-				return &JudgeResponse{}, api.ApiAbort(c, 400, "Judger logger 报错", result)
-			case judger.CodeReadConfigFileError:
-				return &JudgeResponse{}, api.ApiAbort(c, 400, "读取 judger.yml 出错", result)
-			case judger.CodeUserCodeRunnerRunError:
-				return &JudgeResponse{}, api.ApiAbort(c, 400, "用户代码执行出错(用户的问题)", result)
-			default:
-				return &JudgeResponse{}, api.ApiAbort(c, 400, "系统错误", result)
-			}
+			logger.Sugar.Infow("cmd exit non-zero")
+			judgeJudgerErrorResult(result, response)
 		}
-		// 执行成功
-		return &JudgeResponse{
-			Language: languageInfo.Language.String(),
-			Version:  languageInfo.VersionName,
-			Build:    langProfile.Build,
-			Run:      langProfile.Run,
-			Result:   result,
-		}, nil
+		logger.Sugar.Info("parse result success", zap.Any("result", result))
+		if result.Code == judger.CodeSuccess {
+			var r = make([]*RunnerSuccessResult, 0)
+			var status judger.RunnerStatus = judger.ACCEPTED
+			for _, item := range result.RunnerResult {
+				_status := item.Runner.Status
+				if _status > judger.ACCEPTED {
+					status = _status
+				}
+				r = append(r, &RunnerSuccessResult{
+					Status:         &_status,
+					CpuTimeUsed:    item.Runner.CpuTimeUsed,
+					CpuTimeUsedUs:  item.Runner.CpuTimeUsedUs,
+					RealTimeUsed:   item.Runner.RealTimeUsed,
+					RealTimeUsedUs: item.Runner.RealTimeUsedUs,
+					MemoryUsed:     item.Runner.MemoryUsed,
+				})
+			}
+			response.Status = status
+			response.Result = r
+		} else {
+			// 默认就是系统错误
+			logger.Sugar.Infow("judger result code is not zero")
+			judgeJudgerErrorResult(result, response)
+			response.Message = fmt.Sprintf("JudgeX error: %s", result.Error)
+		}
+
+		response.StatusInfo = GetStatusInfo(response.Status)
+		return response, nil
 	} else {
 		// golang 在执行命令的时候出了问题, maybe I/O problem
 		return &JudgeResponse{}, api.ApiAbort(c, 400, "JudgeX 内部出现错误", cmdStatus.Error.Error())

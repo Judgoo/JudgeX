@@ -34,16 +34,19 @@ func judgeLanguageByVersion(service languages.Service) fiber.Handler {
 			return api.ApiAbort(c, fiber.StatusUnprocessableEntity, "Validation Error", validationErrors)
 		}
 		version := c.Params("version", "")
-		resp, judgeErr := service.Judge(c, &requestBody, &language, version)
+		id := c.Locals("requestid").(string)
+
+		resp, judgeErr := service.Judge(c, id, &requestBody, &language, version)
 		if judgeErr != nil {
-			switch judgeErr {
-			case languages.ErrorLanguageVersionNotFound:
+			if judgeErr == languages.ErrorLanguageVersionNotFound {
 				return api.ApiAbort(c, fiber.StatusBadRequest, judgeErr.Error(), fmt.Sprintf("version %s not found in language %s", version, languageString))
-			default:
-				// 这里都看做返回的是 api.ApiAbort
-				return judgeErr
 			}
+			if judgeErr == languages.ErrorEmptyCode {
+				return api.ApiAbort(c, fiber.StatusBadRequest, judgeErr.Error(), "please input code")
+			}
+			// 这里都看做返回的是 api.ApiAbort
+			return judgeErr
 		}
-		return c.JSON(resp)
+		return api.NormalSuccess(c, resp)
 	}
 }

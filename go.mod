@@ -19,6 +19,7 @@ require (
 	github.com/json-iterator/go v1.1.10
 	github.com/labstack/gommon v0.3.0
 	github.com/mitchellh/copystructure v1.1.2 // indirect
+	github.com/osamingo/indigo v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/zeebo/blake3 v0.1.1

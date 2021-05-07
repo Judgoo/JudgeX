@@ -150,24 +150,23 @@ var VersionNameMap = map[LanguageType][]string{
 	TypeScript: {"typescript"},
 }
 
-func (lang *LanguageType) GetVersionNames(version string) []string {
-	return VersionNameMap[*lang]
+func (lt *LanguageType) GetVersionNames(version string) []string {
+	return VersionNameMap[*lt]
 }
 
-func (lang *LanguageType) GetVersionInfo(version string) (string, *VersionInfo, bool) {
+func (lt *LanguageType) GetVersionInfo(version string) (string, *VersionInfo, bool) {
 	var (
 		vInfo *VersionInfo
-		vName string
+		vName string = version
 		ok    bool
 	)
 	if version == "" {
-		versions := VersionNameMap[*lang]
-		// 获取第一个 version
+		versions := VersionNameMap[*lt]
 		vName = versions[0]
 		vInfo = VersionInfos[vName]
 		ok = true
 	} else {
 		vInfo, ok = VersionInfos[version]
 	}
-	return version, vInfo, ok
+	return vName, vInfo, ok
 }

@@ -6,11 +6,13 @@ import (
 
 	v1 "github.com/Judgoo/JudgeX/api/v1/routes"
 	"github.com/Judgoo/JudgeX/pkg/api"
+	"github.com/Judgoo/JudgeX/pkg/flake"
 	"github.com/Judgoo/JudgeX/pkg/languages"
 	xUtils "github.com/Judgoo/JudgeX/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 )
 
 func setupMiddlewares(app *fiber.App) {
@@ -23,7 +25,12 @@ func setupMiddlewares(app *fiber.App) {
 	// 	fmt.Printf("error opening file: %v", err)
 	// 	os.Exit(1)
 	// }
-
+	app.Use(requestid.New(requestid.Config{
+		Next:       nil,
+		Header:     fiber.HeaderXRequestID,
+		Generator:  flake.Digest,
+		ContextKey: "requestid",
+	}))
 	// app.Use(logger.New(logger.Config{
 	// 	Output: w,
 	// }))
