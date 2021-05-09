@@ -5,6 +5,7 @@ import (
 	"os"
 
 	v1 "github.com/Judgoo/JudgeX/api/v1/routes"
+	"github.com/Judgoo/JudgeX/middlewares/limiter"
 	"github.com/Judgoo/JudgeX/pkg/api"
 	"github.com/Judgoo/JudgeX/pkg/flake"
 	"github.com/Judgoo/JudgeX/pkg/judge"
@@ -22,6 +23,11 @@ func setupMiddlewares(app *fiber.App) {
 		Header:     fiber.HeaderXRequestID,
 		Generator:  flake.Digest,
 		ContextKey: "requestid",
+	}))
+	// 10 requests per second, support 10 burst
+	app.Use(limiter.New(limiter.Config{
+		Limit: 10,
+		Burst: 10,
 	}))
 }
 

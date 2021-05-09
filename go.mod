@@ -16,6 +16,7 @@ require (
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.10
+	github.com/kiyonlin/rate v0.2.2
 	github.com/labstack/gommon v0.3.0
 	github.com/mitchellh/copystructure v1.1.2 // indirect
 	github.com/osamingo/indigo v1.1.0
