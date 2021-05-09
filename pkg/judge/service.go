@@ -167,7 +167,13 @@ func processTestData(workPath string, data *entities.JudgePostData) TestDataResu
 
 func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo, testdataEntrys *TestDataEntrys, langProfile *languages.LanguageProfile) (*judger.IJudger, error) {
 	lang := languageInfo.Language
-	judgeCommand := fmt.Sprintf("docker run --rm -v %s:/workspace %s", workPath, languageInfo.Version.ImageName)
+	capsToDrop := [...]string{"MKNOD", "NET_RAW", "NET_BIND_SERVICE"}
+	var capsToDropString string
+	for _, ct := range capsToDrop {
+		capsToDropString += fmt.Sprintf("--cap-drop %s ", ct)
+	}
+	args := fmt.Sprintf("--network none --cpus 1 -m 100m %s --rm -v %s:/workspace", strings.TrimSpace(capsToDropString), workPath)
+	judgeCommand := fmt.Sprintf("docker run %s %s", args, languageInfo.Version.ImageName)
 	var judgerStruct = judger.IJudger{
 		Language: lang.String(),
 		Build:    langProfile.Build,
