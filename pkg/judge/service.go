@@ -12,7 +12,7 @@ import (
 
 	"github.com/Judgoo/JudgeX/logger"
 	"github.com/Judgoo/JudgeX/pkg/entities"
-	"github.com/Judgoo/JudgeX/pkg/languages"
+	"github.com/Judgoo/languages"
 	"github.com/go-cmd/cmd"
 	"github.com/panjf2000/ants/v2"
 	"github.com/pkg/errors"

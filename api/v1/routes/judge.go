@@ -8,7 +8,7 @@ import (
 	"github.com/Judgoo/JudgeX/pkg/constants"
 	"github.com/Judgoo/JudgeX/pkg/entities"
 	"github.com/Judgoo/JudgeX/pkg/judge"
-	"github.com/Judgoo/JudgeX/pkg/languages"
+	"github.com/Judgoo/languages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 
