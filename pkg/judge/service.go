@@ -60,7 +60,6 @@ type languageInfoMap map[string][]languageInfoDisplay
 
 type Service interface {
 	GetLanguages() languageInfoMap
-	GetLangProfile(*languages.LanguageType) *languages.LanguageProfile
 	Judge(requestid string, data *entities.JudgePostData, li *languages.LanguageInfo) (*JudgeResponse, error)
 }
 
@@ -85,10 +84,6 @@ func (s *service) GetLanguages() languageInfoMap {
 		}
 	}
 	return result
-}
-
-func (s *service) GetLangProfile(lang *languages.LanguageType) *languages.LanguageProfile {
-	return (*languages.ProfileMap)[lang.String()]
 }
 
 type File struct {
@@ -277,7 +272,7 @@ func Release() {
 }
 
 func (s *service) Judge(requestid string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo) (*JudgeResponse, error) {
-	langProfile := s.GetLangProfile(languageInfo.Language)
+	langProfile := languageInfo.Language.Profile()
 	workPath := getWorkspacePath(data.ID, requestid)
 	fmt.Println(workPath)
 	file := &File{

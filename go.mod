@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/Judgoo/Judger v0.0.0-20210507174822-46e2551b6760
-	github.com/Judgoo/languages v0.0.1
+	github.com/Judgoo/languages v0.0.2
 	github.com/go-cmd/cmd v1.3.0
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofiber/fiber/v2 v2.7.1
