@@ -12,14 +12,13 @@ import (
 
 	"github.com/Judgoo/JudgeX/logger"
 	"github.com/Judgoo/JudgeX/pkg/entities"
+	"github.com/Judgoo/JudgeX/utils"
 	"github.com/Judgoo/languages"
 	"github.com/go-cmd/cmd"
 	"github.com/panjf2000/ants/v2"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
-
-	xUtils "github.com/Judgoo/JudgeX/utils"
 
 	judger "github.com/Judgoo/Judger/entities"
 )
@@ -86,11 +85,6 @@ func (s *service) GetLanguages() languageInfoMap {
 	return result
 }
 
-type File struct {
-	Path    string
-	Content []byte
-}
-
 func getWorkspacePath(id string, requestid string) string {
 	// 也许可以换成专业的文件系统来做这件事
 	// 文件夹分层 b6eec00f2b9335ece97f7a8f8b2cfeb1 -> b6/ee/b6eec00f2b9335ece97f7a8f8b2cfeb1
@@ -104,15 +98,7 @@ func getWorkspacePath(id string, requestid string) string {
 	return path.Join(workDir, fmt.Sprintf("%s-%s", prefix, id))
 }
 
-func WriteFile(file *File) error {
-	err := os.MkdirAll(filepath.Dir(file.Path), os.ModeDir|(xUtils.OS_USER_RWX|xUtils.OS_ALL_R))
-	if err != nil {
-		return errors.Wrapf(err, "create directory %s fail", file.Path)
-	}
-	return os.WriteFile(file.Path, file.Content, (xUtils.OS_USER_RW | xUtils.OS_ALL_R))
-}
-
-type TestData = map[int][2]File
+type TestData = map[int][2]utils.File
 type TestDataEntrys = []string
 
 func writeTestData(workPath string, data *entities.JudgePostData) (TestData, TestDataEntrys, error) {
@@ -125,17 +111,17 @@ func writeTestData(workPath string, data *entities.JudgePostData) (TestData, Tes
 		outS := fmt.Sprintf("%d.out", i)
 		entry := fmt.Sprintf("%s::%s", inS, outS)
 		testdataEntrys = append(testdataEntrys, entry)
-		in := File{
-			path.Join(workPath, inS),
-			[]byte(inputs[i]),
+		in := utils.File{
+			Path:    path.Join(workPath, inS),
+			Content: []byte(inputs[i]),
 		}
-		out := File{
-			path.Join(workPath, outS),
-			[]byte(outputs[i]),
+		out := utils.File{
+			Path:    path.Join(workPath, outS),
+			Content: []byte(outputs[i]),
 		}
-		WriteFile(&in)
-		WriteFile(&out)
-		testdata[i] = [2]File{in, out}
+		utils.WriteFile(&in)
+		utils.WriteFile(&out)
+		testdata[i] = [2]utils.File{in, out}
 	}
 	return testdata, testdataEntrys, nil
 }
@@ -186,45 +172,12 @@ func generateJudgerYml(workPath string, data *entities.JudgePostData, languageIn
 	if err != nil {
 		return new(judger.IJudger), err
 	}
-	file := &File{
+	file := &utils.File{
 		Path:    filepath.Join(workPath, "judger.yml"),
 		Content: fileContent,
 	}
 
-	return &judgerStruct, WriteFile(file)
-}
-
-func execJudger(str string, dir string) *cmd.Status {
-	target := strings.Split(str, " ")
-	dockerCmd := cmd.NewCmd(target[0], target[1:]...)
-	if dir != "" {
-		dockerCmd.Dir = dir
-	}
-	statusChan := dockerCmd.Start() // non-blocking
-
-	stopCh := make(chan struct{})
-	// 2 分钟后杀死进程
-	go func() {
-		t := time.After(2 * time.Minute)
-		for {
-			// Check if command is done
-			select {
-			case <-stopCh:
-				fmt.Println("done cmd")
-				t = nil
-				return
-			case <-t:
-				fmt.Println("stop docker cmd")
-				dockerCmd.Stop()
-				return
-			}
-		}
-	}()
-
-	// Block waiting for command to exit, be stopped, or be killed
-	finalStatus := <-statusChan
-	close(stopCh)
-	return &finalStatus
+	return &judgerStruct, utils.WriteFile(file)
 }
 
 func judgeJudgerErrorResult(result *judger.NormalResult, response *JudgeResponse) {
@@ -261,10 +214,11 @@ var p *ants.PoolWithFunc
 func init() {
 	p, _ = ants.NewPoolWithFunc(6, func(i interface{}) {
 		c := i.(*ExecJudgerArg)
+		fmt.Print("in Goroutine Pool\n")
 		fmt.Printf("WorkPath %s\n", c.WorkPath)
 		fmt.Printf("Cmd %s\n", c.Cmd)
-		c.Ch <- execJudger(c.Cmd, c.WorkPath)
-	}, ants.WithExpiryDuration(2*time.Minute), ants.WithNonblocking(true))
+		c.Ch <- utils.Exec(c.Cmd, c.WorkPath)
+	}, ants.WithExpiryDuration(2*time.Minute))
 }
 
 func Release() {
@@ -275,11 +229,11 @@ func (s *service) Judge(requestid string, data *entities.JudgePostData, language
 	langProfile := languageInfo.Language.Profile()
 	workPath := getWorkspacePath(data.ID, requestid)
 	fmt.Println(workPath)
-	file := &File{
-		filepath.Join(workPath, langProfile.Filename),
-		[]byte(data.Code),
+	file := &utils.File{
+		Path:    filepath.Join(workPath, langProfile.Filename),
+		Content: []byte(data.Code),
 	}
-	err := WriteFile(file)
+	err := utils.WriteFile(file)
 	if err != nil {
 		return &JudgeResponse{}, err
 	}

@@ -1,30 +1,43 @@
 package utils
 
 import (
-	"bytes"
-	"os/exec"
+	"fmt"
 	"strings"
+	"time"
 
-	"github.com/pkg/errors"
+	"github.com/go-cmd/cmd"
 )
 
-var ErrCommandInvalid = errors.New("error command string")
-
-func Exec(str string, dir string) (string, string, int, error) {
-	var (
-		stdout, stderr bytes.Buffer
-		err            error
-	)
+func Exec(str string, dir string) *cmd.Status {
 	target := strings.Split(str, " ")
-	if len(target) < 1 {
-		return "", "", 0, ErrCommandInvalid
-	}
-	runner := exec.Command(target[0], target[1:]...)
+
+	dockerCmd := cmd.NewCmd(target[0], target[1:]...)
 	if dir != "" {
-		runner.Dir = dir
+		dockerCmd.Dir = dir
 	}
-	runner.Stdout = &stdout
-	runner.Stderr = &stderr
-	err = runner.Run()
-	return stdout.String(), stderr.String(), runner.ProcessState.ExitCode(), err
+	statusChan := dockerCmd.Start() // non-blocking
+
+	stopCh := make(chan struct{})
+	// 2 分钟后杀死进程
+	go func() {
+		t := time.After(2 * time.Minute)
+		for {
+			// Check if command is done
+			select {
+			case <-stopCh:
+				fmt.Println("done cmd")
+				t = nil
+				return
+			case <-t:
+				fmt.Println("stop docker cmd")
+				dockerCmd.Stop()
+				return
+			}
+		}
+	}()
+
+	// Block waiting for command to exit, be stopped, or be killed
+	finalStatus := <-statusChan
+	close(stopCh)
+	return &finalStatus
 }
