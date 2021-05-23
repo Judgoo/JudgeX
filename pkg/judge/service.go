@@ -153,8 +153,8 @@ func generateJudgerYml(workPath string, data *entities.JudgePostData, languageIn
 	for _, ct := range capsToDrop {
 		capsToDropString += fmt.Sprintf("--cap-drop %s ", ct)
 	}
-	args := fmt.Sprintf("--network none --cpus 1 -m 100m %s --rm -v %s:/workspace", strings.TrimSpace(capsToDropString), workPath)
-	judgeCommand := fmt.Sprintf("docker run %s %s", args, languageInfo.Version.ImageName)
+	args := fmt.Sprintf("--privileged --cpus 2 -m 100m %s --rm -v %s:/workspace", strings.TrimSpace(capsToDropString), workPath)
+	judgeCommand := fmt.Sprintf("podman --runtime /usr/bin/crun run %s %s", args, languageInfo.Version.ImageName)
 	var judgerStruct = judger.IJudger{
 		Language: lang.String(),
 		Build:    langProfile.Build,
@@ -212,11 +212,11 @@ type ExecJudgerArg struct {
 var p *ants.PoolWithFunc
 
 func init() {
-	p, _ = ants.NewPoolWithFunc(6, func(i interface{}) {
+	p, _ = ants.NewPoolWithFunc(1000, func(i interface{}) {
 		c := i.(*ExecJudgerArg)
-		fmt.Print("in Goroutine Pool\n")
-		fmt.Printf("WorkPath %s\n", c.WorkPath)
-		fmt.Printf("Cmd %s\n", c.Cmd)
+		// fmt.Print("in Goroutine Pool\n")
+		// fmt.Printf("WorkPath %s\n", c.WorkPath)
+		// fmt.Printf("Cmd %s\n", c.Cmd)
 		c.Ch <- utils.Exec(c.Cmd, c.WorkPath)
 	}, ants.WithExpiryDuration(2*time.Minute))
 }
@@ -228,7 +228,7 @@ func Release() {
 func (s *service) Judge(requestid string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo) (*JudgeResponse, error) {
 	langProfile := languageInfo.Language.Profile()
 	workPath := getWorkspacePath(data.ID, requestid)
-	fmt.Println(workPath)
+	// fmt.Println(workPath)
 	file := &utils.File{
 		Path:    filepath.Join(workPath, langProfile.Filename),
 		Content: []byte(data.Code),
@@ -245,14 +245,8 @@ func (s *service) Judge(requestid string, data *entities.JudgePostData, language
 	if errG != nil {
 		return &JudgeResponse{}, errG
 	}
-	cmdCh := make(chan *cmd.Status)
-	p.Invoke(&ExecJudgerArg{
-		Ch:       cmdCh,
-		WorkPath: workPath,
-		Cmd:      judgerResult.DockerRunCmd,
-	})
-	cmdStatus := <-cmdCh
-	fmt.Printf("cmdStatus %#v", cmdStatus)
+	cmdStatus := utils.Exec(judgerResult.DockerRunCmd, workPath)
+	// fmt.Printf("cmdStatus %#v", cmdStatus)
 	if cmdStatus.Error != nil {
 		return &JudgeResponse{}, cmdStatus.Error
 	}

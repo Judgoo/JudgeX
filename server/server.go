@@ -28,6 +28,9 @@ func setupMiddlewares(app *fiber.App) {
 	app.Use(limiter.New(limiter.Config{
 		Limit: 10,
 		Burst: 10,
+		Filter: func(c *fiber.Ctx) bool {
+			return c.Hostname() != "127.0.0.1"
+		},
 	}))
 }
 
