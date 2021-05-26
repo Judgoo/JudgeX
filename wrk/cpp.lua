@@ -10,7 +10,7 @@ wrk.body = [[
 	],
 	"outputs": [
 		"helloworld\n",
-		"helloworld1\n",
+		"helloworld\n",
 		"helloworld\n"
 	]
 }

@@ -11,9 +11,8 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/json-iterator/go v1.1.10
 	github.com/kiyonlin/rate v0.2.2
-	github.com/osamingo/indigo v1.1.0
 	github.com/pkg/errors v0.9.1
-	github.com/zeebo/blake3 v0.1.1
+	github.com/rs/xid v1.3.0
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/mod v0.4.2 // indirect

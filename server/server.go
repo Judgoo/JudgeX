@@ -21,9 +21,10 @@ func setupMiddlewares(app *fiber.App) {
 	app.Use(requestid.New(requestid.Config{
 		Next:       nil,
 		Header:     fiber.HeaderXRequestID,
-		Generator:  flake.Digest,
+		Generator:  flake.NextID,
 		ContextKey: "requestid",
 	}))
+
 	// 10 requests per second, support 10 burst
 	app.Use(limiter.New(limiter.Config{
 		Limit: 10,
