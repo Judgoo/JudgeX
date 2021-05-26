@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/Judgoo/JudgeX/logger"
 	"github.com/Judgoo/JudgeX/pkg/entities"
@@ -94,55 +95,9 @@ func getWorkspacePath(id string, requestid string) string {
 	return path.Join(workDir, fmt.Sprintf("%s-%s", prefix, id))
 }
 
-type TestData = map[int][2]utils.File
-type TestDataEntrys = []string
+type TestDataItem = *[2]*utils.File
 
-func writeTestData(workPath string, data *entities.JudgePostData) (TestData, TestDataEntrys, error) {
-	inputs := data.Inputs
-	outputs := data.Outputs
-	testdata := make(TestData)
-	testdataEntrys := make(TestDataEntrys, 0, len(inputs)+1)
-	for i := range inputs {
-		inS := fmt.Sprintf("%d.in", i)
-		outS := fmt.Sprintf("%d.out", i)
-		entry := fmt.Sprintf("%s::%s", inS, outS)
-		testdataEntrys = append(testdataEntrys, entry)
-		in := utils.File{
-			Path:    path.Join(workPath, inS),
-			Content: []byte(inputs[i]),
-		}
-		out := utils.File{
-			Path:    path.Join(workPath, outS),
-			Content: []byte(outputs[i]),
-		}
-		utils.WriteFile(&in)
-		utils.WriteFile(&out)
-		testdata[i] = [2]utils.File{in, out}
-	}
-	return testdata, testdataEntrys, nil
-}
-
-type TestDataResult struct {
-	Result TestDataEntrys
-	Error  error
-}
-
-func processTestData(workPath string, data *entities.JudgePostData) TestDataResult {
-	tdCh := make(chan TestDataResult)
-
-	go func() {
-		_, testdataEntrys, err := writeTestData(workPath, data)
-		if err != nil {
-			tdCh <- TestDataResult{nil, err}
-		} else {
-			tdCh <- TestDataResult{testdataEntrys, nil}
-		}
-	}()
-
-	return <-tdCh
-}
-
-func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo, testdataEntrys *TestDataEntrys, langProfile *languages.LanguageProfile) (*judger.IJudger, error) {
+func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo, testdataEntrys []string, langProfile *languages.LanguageProfile) (*judger.IJudger, error) {
 	lang := languageInfo.Language
 	capsToDrop := [...]string{"MKNOD"}
 	var capsToDropString string
@@ -151,6 +106,7 @@ func generateJudgerYml(workPath string, data *entities.JudgePostData, languageIn
 	}
 	args := fmt.Sprintf("--privileged --cpus 2 -m 100m %s --rm -v %s:/workspace", strings.TrimSpace(capsToDropString), workPath)
 	judgeCommand := fmt.Sprintf("podman --runtime /usr/bin/crun run %s %s", args, languageInfo.Version.ImageName)
+
 	var judgerStruct = judger.IJudger{
 		Language: lang.String(),
 		Build:    langProfile.Build,
@@ -161,10 +117,10 @@ func generateJudgerYml(workPath string, data *entities.JudgePostData, languageIn
 			Mco:     langProfile.Mco,
 			Stderr:  true,
 		},
-		TestData:     *testdataEntrys,
+		TestData:     testdataEntrys,
 		DockerRunCmd: judgeCommand,
-		DirectRun:    false,
 	}
+
 	fileContent, err := yaml.Marshal(judgerStruct)
 	if err != nil {
 		return new(judger.IJudger), err
@@ -198,25 +154,64 @@ func judgeJudgerErrorResult(result *judger.NormalResult, response *JudgeResponse
 	}
 }
 
+func writeTestData(item TestDataItem, w *sync.WaitGroup) {
+	utils.WriteFile(item[0])
+	utils.WriteFile(item[1])
+	w.Done()
+}
+
 func (s *service) Judge(requestid string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo) (*JudgeResponse, error) {
 	langProfile := languageInfo.Language.Profile()
 	workPath := getWorkspacePath(data.ID, requestid)
-	file := &utils.File{
-		Path:    filepath.Join(workPath, langProfile.Filename),
-		Content: []byte(data.Code),
+
+	codeErrChan := make(chan error)
+
+	go func() {
+		file := &utils.File{
+			Path:    filepath.Join(workPath, langProfile.Filename),
+			Content: []byte(data.Code),
+		}
+		err := utils.WriteFile(file)
+		codeErrChan <- err
+	}()
+
+	inputs := data.Inputs
+	outputs := data.Outputs
+	testdataList := make([]TestDataItem, 0)
+	testdataEntrys := make([]string, 0, len(inputs)+1)
+
+	for i := range inputs {
+		inS := fmt.Sprintf("%d.in", i)
+		outS := fmt.Sprintf("%d.out", i)
+		entry := fmt.Sprintf("%s::%s", inS, outS)
+
+		in := utils.File{
+			Path:    path.Join(workPath, inS),
+			Content: []byte(inputs[i]),
+		}
+		out := utils.File{
+			Path:    path.Join(workPath, outS),
+			Content: []byte(outputs[i]),
+		}
+		testdataList = append(testdataList, &[2]*utils.File{&in, &out})
+		testdataEntrys = append(testdataEntrys, entry)
 	}
-	err := utils.WriteFile(file)
-	if err != nil {
-		return &JudgeResponse{}, err
+
+	var w *sync.WaitGroup = new(sync.WaitGroup)
+	w.Add(len(testdataList))
+	for _, item := range testdataList {
+		go writeTestData(item, w)
 	}
-	testdataResult := processTestData(workPath, data)
-	if testdataResult.Error != nil {
-		return &JudgeResponse{}, testdataResult.Error
-	}
-	judgerResult, errG := generateJudgerYml(workPath, data, languageInfo, &testdataResult.Result, langProfile)
+	w.Wait()
+
+	judgerResult, errG := generateJudgerYml(workPath, data, languageInfo, testdataEntrys, langProfile)
 	if errG != nil {
 		return &JudgeResponse{}, errG
 	}
+	if codeErr := <-codeErrChan; codeErr != nil {
+		return &JudgeResponse{}, codeErr
+	}
+
 	logger.Sugar.Infof("workPath: %s", workPath)
 	cmdStatus := utils.Exec(judgerResult.DockerRunCmd, workPath)
 	logger.Sugar.Infof("workPath: %s cmdStatus %#v", workPath, cmdStatus)

@@ -19,6 +19,7 @@ func ReadDataFromFile(file string) ([]byte, error) {
 
 type File struct {
 	Path    string
+	Name    string
 	Content []byte
 }
 
