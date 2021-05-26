@@ -5,11 +5,12 @@ go 1.16
 require (
 	github.com/Judgoo/Judger v0.0.3
 	github.com/Judgoo/languages v0.0.2
+	github.com/containerd/containerd v1.5.2
 	github.com/go-cmd/cmd v1.3.0
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/gofiber/fiber/v2 v2.7.1
 	github.com/joho/godotenv v1.3.0
-	github.com/json-iterator/go v1.1.10
+	github.com/json-iterator/go v1.1.11
 	github.com/kiyonlin/rate v0.2.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/xid v1.3.0
