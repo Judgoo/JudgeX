@@ -96,5 +96,4 @@ func Listen(app *fiber.App) error {
 }
 
 func Release() {
-	judge.Release()
 }

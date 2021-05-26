@@ -8,16 +8,12 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/Judgoo/JudgeX/logger"
 	"github.com/Judgoo/JudgeX/pkg/entities"
 	"github.com/Judgoo/JudgeX/utils"
 	"github.com/Judgoo/languages"
-	"github.com/go-cmd/cmd"
-	"github.com/panjf2000/ants/v2"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v2"
 
 	judger "github.com/Judgoo/Judger/entities"
@@ -30,12 +26,12 @@ type JudgerInfo struct {
 	Run      string
 }
 type RunnerSuccessResult struct {
-	Status         *judger.RunnerStatus `json:"status"`
-	CpuTimeUsed    int                  `json:"cpu_time_used"`
-	CpuTimeUsedUs  int                  `json:"cpu_time_used_us"`
-	RealTimeUsed   int                  `json:"real_time_used"`
-	RealTimeUsedUs int                  `json:"real_time_used_us"`
-	MemoryUsed     int                  `json:"memory_used"`
+	Status         judger.RunnerStatus `json:"status"`
+	CpuTimeUsed    int                 `json:"cpu_time_used"`
+	CpuTimeUsedUs  int                 `json:"cpu_time_used_us"`
+	RealTimeUsed   int                 `json:"real_time_used"`
+	RealTimeUsedUs int                 `json:"real_time_used_us"`
+	MemoryUsed     int                 `json:"memory_used"`
 }
 type JudgeResponse struct {
 	Status     judger.RunnerStatus    `json:"status"`
@@ -90,7 +86,7 @@ func getWorkspacePath(id string, requestid string) string {
 	// 文件夹分层 b6eec00f2b9335ece97f7a8f8b2cfeb1 -> b6/ee/b6eec00f2b9335ece97f7a8f8b2cfeb1
 	folder1 := requestid[:2]
 	folder2 := requestid[2:4]
-	prefix := requestid[:32]
+	prefix := requestid[:]
 
 	// TODO `JudgeWorkspace` 这个换成放在设置项中的可配置的
 	workDir := filepath.Join(os.TempDir(), "JudgeWorkspace", folder1, folder2)
@@ -148,7 +144,7 @@ func processTestData(workPath string, data *entities.JudgePostData) TestDataResu
 
 func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo, testdataEntrys *TestDataEntrys, langProfile *languages.LanguageProfile) (*judger.IJudger, error) {
 	lang := languageInfo.Language
-	capsToDrop := [...]string{"MKNOD", "NET_RAW", "NET_BIND_SERVICE"}
+	capsToDrop := [...]string{"MKNOD"}
 	var capsToDropString string
 	for _, ct := range capsToDrop {
 		capsToDropString += fmt.Sprintf("--cap-drop %s ", ct)
@@ -163,6 +159,7 @@ func generateJudgerYml(workPath string, data *entities.JudgePostData, languageIn
 			CpuTime: int(data.TimeLimit),
 			Memory:  int(data.MemoryLimit),
 			Mco:     langProfile.Mco,
+			Stderr:  true,
 		},
 		TestData:     *testdataEntrys,
 		DockerRunCmd: judgeCommand,
@@ -190,45 +187,20 @@ func judgeJudgerErrorResult(result *judger.NormalResult, response *JudgeResponse
 	switch result.Code {
 	case judger.CodeCompileError:
 		response.Status = judger.COMPILE_ERROR
-	case judger.CodeUserCodeRunnerRunError:
+	case judger.CodeRunError:
 		response.Status = judger.RUNTIME_ERROR
-	case judger.CodeInitLoggerError:
-		fallthrough
 	case judger.CodeNoInputDataError:
-		// TODO 这里需要优化
-		// 应该报错
+		response.Status = judger.SYSTEM_ERROR
+	case judger.CodeInitLoggerError:
 		fallthrough
 	default:
 		response.Status = judger.SYSTEM_ERROR
 	}
 }
 
-type ExecJudgerArg struct {
-	WorkPath string
-	Cmd      string
-	Ch       chan *cmd.Status
-}
-
-var p *ants.PoolWithFunc
-
-func init() {
-	p, _ = ants.NewPoolWithFunc(1000, func(i interface{}) {
-		c := i.(*ExecJudgerArg)
-		// fmt.Print("in Goroutine Pool\n")
-		// fmt.Printf("WorkPath %s\n", c.WorkPath)
-		// fmt.Printf("Cmd %s\n", c.Cmd)
-		c.Ch <- utils.Exec(c.Cmd, c.WorkPath)
-	}, ants.WithExpiryDuration(2*time.Minute))
-}
-
-func Release() {
-	p.Release()
-}
-
 func (s *service) Judge(requestid string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo) (*JudgeResponse, error) {
 	langProfile := languageInfo.Language.Profile()
 	workPath := getWorkspacePath(data.ID, requestid)
-	// fmt.Println(workPath)
 	file := &utils.File{
 		Path:    filepath.Join(workPath, langProfile.Filename),
 		Content: []byte(data.Code),
@@ -245,8 +217,9 @@ func (s *service) Judge(requestid string, data *entities.JudgePostData, language
 	if errG != nil {
 		return &JudgeResponse{}, errG
 	}
+	logger.Sugar.Infof("workPath: %s", workPath)
 	cmdStatus := utils.Exec(judgerResult.DockerRunCmd, workPath)
-	// fmt.Printf("cmdStatus %#v", cmdStatus)
+	logger.Sugar.Infof("workPath: %s cmdStatus %#v", workPath, cmdStatus)
 	if cmdStatus.Error != nil {
 		return &JudgeResponse{}, cmdStatus.Error
 	}
@@ -274,31 +247,36 @@ func (s *service) Judge(requestid string, data *entities.JudgePostData, language
 			logger.Sugar.Infow("cmd exit non-zero")
 			judgeJudgerErrorResult(result, response)
 		}
-		logger.Sugar.Info("parse result success", zap.Any("result", result))
+		logger.Sugar.Infow("parse result success", "result", result)
+		logger.Sugar.Infof("result  %#v", result)
 		if result.Code == judger.CodeSuccess {
 			var r = make([]*RunnerSuccessResult, 0)
-			var status judger.RunnerStatus = judger.ACCEPTED
+			var finalStatus judger.RunnerStatus = judger.ACCEPTED
 			for _, item := range result.RunnerResult {
-				_status := item.Runner.Status
-				if _status > judger.ACCEPTED {
-					status = _status
+				_res := &RunnerSuccessResult{}
+				if item.Code == judger.Success {
+					// else {
+					// 如果不等的话说明本次判题不成功
+					// Judger 的顶层已经会报错了
+					// }
+					if item.Runner.Status > judger.ACCEPTED {
+						finalStatus = item.Runner.Status
+					}
+					_res.Status = item.Runner.Status
+					_res.CpuTimeUsed = item.Runner.CpuTimeUsed
+					_res.CpuTimeUsedUs = item.Runner.CpuTimeUsedUs
+					_res.RealTimeUsed = item.Runner.RealTimeUsed
+					_res.RealTimeUsedUs = item.Runner.RealTimeUsedUs
+					_res.MemoryUsed = item.Runner.MemoryUsed
 				}
-				r = append(r, &RunnerSuccessResult{
-					Status:         &_status,
-					CpuTimeUsed:    item.Runner.CpuTimeUsed,
-					CpuTimeUsedUs:  item.Runner.CpuTimeUsedUs,
-					RealTimeUsed:   item.Runner.RealTimeUsed,
-					RealTimeUsedUs: item.Runner.RealTimeUsedUs,
-					MemoryUsed:     item.Runner.MemoryUsed,
-				})
+				r = append(r, _res)
 			}
-			response.Status = status
+			response.Status = finalStatus
 			response.Result = r
 		} else {
-			// 默认就是系统错误
 			logger.Sugar.Infow("judger result code is not zero")
 			judgeJudgerErrorResult(result, response)
-			response.Message = fmt.Sprintf("JudgeX error: %s", result.Error)
+			response.Message = result.Error
 		}
 
 		response.StatusInfo = GetStatusInfo(response.Status)

@@ -12,7 +12,7 @@ go mod download
 
 使用 [air](https://github.com/cosmtrek/air) 这个包运行代码。
 
-安装好之后在当前目录执行 `air -c .air.toml` 就能运行起来了。
+安装好之后在当前目录执行 `air` 就能运行起来了。
 
 你可以创建一个 `.env` 文件：
 
@@ -38,6 +38,11 @@ type LanguageType int
 ### 生成 `languages_impl` 文件
 
 然后想要生成的时候就在根目录下执行 `go generate ./languages` 即可。
+
+## 容器支持
+
+需要安装 podman。
+需要安装 crun 作为运行时。
 
 ## 注意事项
 

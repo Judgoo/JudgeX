@@ -3,7 +3,7 @@ module github.com/Judgoo/JudgeX
 go 1.16
 
 require (
-	github.com/Judgoo/Judger v0.0.0-20210507174822-46e2551b6760
+	github.com/Judgoo/Judger v0.0.3
 	github.com/Judgoo/languages v0.0.2
 	github.com/go-cmd/cmd v1.3.0
 	github.com/go-playground/validator v9.31.0+incompatible
@@ -12,7 +12,6 @@ require (
 	github.com/json-iterator/go v1.1.10
 	github.com/kiyonlin/rate v0.2.2
 	github.com/osamingo/indigo v1.1.0
-	github.com/panjf2000/ants/v2 v2.4.4
 	github.com/pkg/errors v0.9.1
 	github.com/zeebo/blake3 v0.1.1
 	go.uber.org/multierr v1.7.0 // indirect

@@ -1,15 +1,16 @@
 package utils
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
+	"github.com/Judgoo/JudgeX/logger"
 	"github.com/go-cmd/cmd"
 )
 
-func Exec(str string, dir string) *cmd.Status {
-	target := strings.Split(str, " ")
+func Exec(cmdStr string, dir string) *cmd.Status {
+	target := strings.Fields(cmdStr)
+	logger.Sugar.Infof("run cmd %s", cmdStr)
 
 	dockerCmd := cmd.NewCmd(target[0], target[1:]...)
 	if dir != "" {
@@ -21,21 +22,18 @@ func Exec(str string, dir string) *cmd.Status {
 	// 2 分钟后杀死进程
 	go func() {
 		t := time.After(2 * time.Minute)
-		for {
-			// Check if command is done
-			select {
-			case <-stopCh:
-				fmt.Println("done cmd")
-				t = nil
-				return
-			case <-t:
-				fmt.Println("stop docker cmd")
-				dockerCmd.Stop()
-				return
-			}
+		// Check if command is done
+		select {
+		case <-stopCh:
+			logger.Sugar.Info("done cmd")
+			t = nil
+			return
+		case <-t:
+			logger.Sugar.Info("stop docker cmd")
+			dockerCmd.Stop()
+			return
 		}
 	}()
-
 	// Block waiting for command to exit, be stopped, or be killed
 	finalStatus := <-statusChan
 	close(stopCh)
