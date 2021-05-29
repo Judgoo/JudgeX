@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"io"
 	"strings"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/go-cmd/cmd"
 )
 
-func Exec(cmdStr string, dir string) *cmd.Status {
+func Exec(cmdStr string, dir string, stdin io.Reader) *cmd.Status {
 	target := strings.Fields(cmdStr)
 	logger.Sugar.Infof("run cmd %s", cmdStr)
 
@@ -16,7 +17,12 @@ func Exec(cmdStr string, dir string) *cmd.Status {
 	if dir != "" {
 		dockerCmd.Dir = dir
 	}
-	statusChan := dockerCmd.Start() // non-blocking
+	var statusChan <-chan cmd.Status
+	if stdin != nil {
+		statusChan = dockerCmd.StartWithStdin(stdin)
+	} else {
+		statusChan = dockerCmd.Start() // non-blocking
+	}
 
 	stopCh := make(chan struct{})
 	// 2 分钟后杀死进程

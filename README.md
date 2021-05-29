@@ -52,3 +52,13 @@ type LanguageType int
    如：Fix/Add/Remove/Update
 2. 第一行不要太长，简单描述即可  
    具体内容放在 commit 的 body 中
+
+## 软件包
+
+```bash
+sudo apt-get install libdevmapper-dev
+sudo apt-get install libbtrfs-dev
+sudo apt-get install btrfs-progs
+
+export PKG_CONFIG_PATH="/usr/lib/x86_64-linux-gnu/pkgconfig/"
+```

@@ -8,6 +8,7 @@ import (
 	"github.com/Judgoo/JudgeX/pkg/constants"
 	"github.com/Judgoo/JudgeX/pkg/entities"
 	"github.com/Judgoo/JudgeX/pkg/judge"
+	judger "github.com/Judgoo/Judger/entities"
 	"github.com/Judgoo/languages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
@@ -27,7 +28,7 @@ func runLanguageByVersion(service judge.Service) fiber.Handler {
 			return api.ApiAbort(c, fiber.StatusBadRequest, constants.LANGUAGE_NOT_FOUND_ERROR, err.Error())
 		}
 
-		var requestBody entities.JudgePostData
+		var requestBody judger.JudgePostData
 		err = xUtils.ParseJSONBody(c, &requestBody)
 		if err != nil {
 			return api.ApiAbort(c, fiber.StatusBadRequest, constants.PARSE_BODY_ERROR, err.Error())
@@ -54,7 +55,7 @@ func runLanguageByVersion(service judge.Service) fiber.Handler {
 		if strings.TrimSpace(requestBody.Code) == "" {
 			return api.ApiAbort(c, fiber.StatusBadRequest, constants.CODE_EMPTY_ERROR, "please input code")
 		}
-		judgeInfo := judge.JudgeInfo{Language: &lt, Version: versionInfo, VersionName: versionName}
+		judgeInfo := judger.JudgeInfo{Language: &lt, Version: versionInfo, VersionName: versionName}
 
 		resp, judgeErr := service.Judge(requestid, &requestBody, &judgeInfo)
 		if judgeErr != nil {
