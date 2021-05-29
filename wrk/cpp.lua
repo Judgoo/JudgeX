@@ -1,7 +1,7 @@
 wrk.method = "POST"
 wrk.body = [[
 {
-	"id": 1,
+	"key": 1,
 	"code": "#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << \"helloworld\" << endl;\n    return 0;\n}\n",
 	"inputs": [
 		"",
