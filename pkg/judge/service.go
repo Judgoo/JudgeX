@@ -46,17 +46,22 @@ type JudgeResponse struct {
 	Id         string                 `json:"id"`
 }
 
+type JudgeInfo struct {
+	Language    *languages.LanguageType
+	Version     *languages.VersionInfo
+	VersionName string
+}
+
 type languageInfoDisplay struct {
 	VersionName string `json:"version"`
 	DisplayName string `json:"name"`
-	Description string `json:"description"`
 }
 
 type languageInfoMap map[string][]languageInfoDisplay
 
 type Service interface {
 	GetLanguages() languageInfoMap
-	Judge(requestid string, data *entities.JudgePostData, li *languages.LanguageInfo) (*JudgeResponse, error)
+	Judge(requestid string, data *entities.JudgePostData, li *JudgeInfo) (*JudgeResponse, error)
 }
 
 type service struct {
@@ -68,14 +73,20 @@ func NewService() Service {
 
 func (s *service) GetLanguages() languageInfoMap {
 	var result = languageInfoMap{}
-	for lang, vs := range languages.VersionNameMap {
-		result[lang.String()] = make([]languageInfoDisplay, 0)
-		for _, versionName := range vs {
-			versionInfo := languages.VersionInfos[versionName]
-			result[lang.String()] = append(result[lang.String()], languageInfoDisplay{
-				versionName,
-				fmt.Sprintf("%s(%s)", lang.String(), versionInfo.DisplayName),
-				versionInfo.Description,
+	for lang, vss := range languages.LanguagesProfile {
+		result[lang] = make([]languageInfoDisplay, 0)
+		lt, err := languages.ParseLanguageType(lang)
+		if err != nil {
+			continue
+		}
+		for _, versionName := range vss {
+			_versionName, versionInfo, ok := lt.GetVersionInfo(versionName)
+			if !ok {
+				continue
+			}
+			result[lang] = append(result[lang], languageInfoDisplay{
+				_versionName,
+				fmt.Sprintf("%s(%s)", lang, versionInfo.Name),
 			})
 		}
 	}
@@ -97,7 +108,7 @@ func getWorkspacePath(id string, requestid string) string {
 
 type TestDataItem = *[2]*utils.File
 
-func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo, testdataEntrys []string, langProfile *languages.LanguageProfile) (*judger.IJudger, error) {
+func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *JudgeInfo, testdataEntrys []string) (*judger.IJudger, error) {
 	lang := languageInfo.Language
 	capsToDrop := [...]string{"MKNOD"}
 	var capsToDropString string
@@ -105,16 +116,16 @@ func generateJudgerYml(workPath string, data *entities.JudgePostData, languageIn
 		capsToDropString += fmt.Sprintf("--cap-drop %s ", ct)
 	}
 	args := fmt.Sprintf("--privileged --cpus 2 -m 100m %s --rm -v %s:/workspace", strings.TrimSpace(capsToDropString), workPath)
-	judgeCommand := fmt.Sprintf("podman --runtime /usr/bin/crun run %s %s", args, languageInfo.Version.ImageName)
+	judgeCommand := fmt.Sprintf("podman --runtime /usr/bin/crun run %s %s", args, languageInfo.Version.Image)
 
 	var judgerStruct = judger.IJudger{
 		Language: lang.String(),
-		Build:    langProfile.Build,
-		Run:      langProfile.Run,
+		Build:    languageInfo.Version.Build,
+		Run:      languageInfo.Version.Run,
 		RunnerArgs: &judger.IRunnerArgs{
 			CpuTime: int(data.TimeLimit),
 			Memory:  int(data.MemoryLimit),
-			Mco:     langProfile.Mco,
+			Mco:     languageInfo.Version.Mco,
 			Stderr:  true,
 		},
 		TestData:     testdataEntrys,
@@ -160,15 +171,14 @@ func writeTestData(item TestDataItem, w *sync.WaitGroup) {
 	w.Done()
 }
 
-func (s *service) Judge(requestid string, data *entities.JudgePostData, languageInfo *languages.LanguageInfo) (*JudgeResponse, error) {
-	langProfile := languageInfo.Language.Profile()
+func (s *service) Judge(requestid string, data *entities.JudgePostData, languageInfo *JudgeInfo) (*JudgeResponse, error) {
 	workPath := getWorkspacePath(data.ID, requestid)
 
 	codeErrChan := make(chan error)
 
 	go func() {
 		file := &utils.File{
-			Path:    filepath.Join(workPath, langProfile.Filename),
+			Path:    filepath.Join(workPath, languageInfo.Version.Filename),
 			Content: []byte(data.Code),
 		}
 		err := utils.WriteFile(file)
@@ -204,7 +214,7 @@ func (s *service) Judge(requestid string, data *entities.JudgePostData, language
 	}
 	w.Wait()
 
-	judgerResult, errG := generateJudgerYml(workPath, data, languageInfo, testdataEntrys, langProfile)
+	judgerResult, errG := generateJudgerYml(workPath, data, languageInfo, testdataEntrys)
 	if errG != nil {
 		return &JudgeResponse{}, errG
 	}
@@ -224,8 +234,8 @@ func (s *service) Judge(requestid string, data *entities.JudgePostData, language
 			JudgerInfo: &JudgerInfo{
 				Language: languageInfo.Language.String(),
 				Version:  languageInfo.VersionName,
-				Build:    langProfile.Build,
-				Run:      langProfile.Run,
+				Build:    languageInfo.Version.Build,
+				Run:      languageInfo.Version.Run,
 			},
 		}
 		// 解析 Judger 的输出

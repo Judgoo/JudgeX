@@ -54,10 +54,9 @@ func judgeLanguageByVersion(service judge.Service) fiber.Handler {
 		if strings.TrimSpace(requestBody.Code) == "" {
 			return api.ApiAbort(c, fiber.StatusBadRequest, constants.CODE_EMPTY_ERROR, "please input code")
 		}
+		judgeInfo := judge.JudgeInfo{Language: &lt, Version: versionInfo, VersionName: versionName}
 
-		languageInfo := languages.LanguageInfo{Language: &lt, VersionName: versionName, Version: versionInfo}
-
-		resp, judgeErr := service.Judge(requestid, &requestBody, &languageInfo)
+		resp, judgeErr := service.Judge(requestid, &requestBody, &judgeInfo)
 		if judgeErr != nil {
 			return api.ApiAbort(c, fiber.StatusBadRequest, constants.SYSTEM_ERROR, judgeErr.Error())
 		}
