@@ -66,7 +66,7 @@ func (p *Podman) Run(imageName string, dataBytes []byte) (*entities.JudgerResult
 
 	// Container start
 	fmt.Println("Starting container...")
-	err = containers.Start(*p.ctx, r.ID, nil)
+	err = containers.Start(*p.ctx, r.ID, &containers.StartOptions{})
 	if err != nil {
 		fmt.Println(err)
 		return &entities.JudgerResult{}, err

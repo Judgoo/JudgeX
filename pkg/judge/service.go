@@ -43,6 +43,7 @@ type languageInfoMap map[string][]languageInfoDisplay
 
 type Service interface {
 	GetLanguages() languageInfoMap
+	GetExamples() map[string]string
 	Judge(requestid string, data *judger.JudgePostData, li *judger.JudgeInfo) (*JudgeResponse, error)
 	JudgeX(requestid string, data *judger.JudgePostData, li *judger.JudgeInfo) (*JudgeResponse, error)
 }
@@ -72,6 +73,15 @@ func (s *service) GetLanguages() languageInfoMap {
 				versionInfo.Name,
 			})
 		}
+	}
+	return result
+}
+
+func (s *service) GetExamples() map[string]string {
+	var result = map[string]string{}
+
+	for lang, example := range languages.ExamplesMap {
+		result[lang.String()] = example
 	}
 	return result
 }

@@ -12,6 +12,8 @@ import (
 func LanguageRoutes(route fiber.Router, service judge.Service) {
 	route.Get("/languages", getLanguages(service))
 	route.Get("/languages/:language", getVersionsByLang(service))
+	route.Get("/examples", getExamples(service))
+	route.Get("/examples/:language", getExampleByLang(service))
 }
 func getLanguages(service judge.Service) fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -29,6 +31,26 @@ func getVersionsByLang(service judge.Service) fiber.Handler {
 		}
 
 		result := service.GetLanguages()
+		return api.NormalSuccess(c, result[lt.String()])
+	}
+}
+
+func getExamples(service judge.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		result := service.GetExamples()
+		return api.NormalSuccess(c, result)
+	}
+}
+
+func getExampleByLang(service judge.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		languageString := utils.CopyString(c.Params("language"))
+		lt, err := languages.ParseLanguageType(languageString)
+		if err != nil {
+			return api.ApiAbort(c, fiber.StatusBadRequest, constants.LANGUAGE_NOT_FOUND_ERROR, err.Error())
+		}
+
+		result := service.GetExamples()
 		return api.NormalSuccess(c, result[lt.String()])
 	}
 }
