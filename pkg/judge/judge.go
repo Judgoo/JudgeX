@@ -11,7 +11,6 @@ import (
 
 	"github.com/Judgoo/JudgeX/logger"
 	"github.com/Judgoo/JudgeX/utils"
-	"github.com/Judgoo/Judger/entities"
 	judger "github.com/Judgoo/Judger/entities"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -32,7 +31,7 @@ func getWorkspacePath(key string, requestid string) string {
 
 type TestDataItem = *[2]*utils.File
 
-func generateJudgerYml(workPath string, data *entities.JudgePostData, languageInfo *judger.JudgeInfo, testdataEntrys []string) (*judger.IJudger, error) {
+func generateJudgerYml(workPath string, data *judger.JudgePostData, languageInfo *judger.JudgeInfo, testdataEntrys []string) (*judger.IJudger, error) {
 	lang := languageInfo.Language
 	capsToDrop := [...]string{"MKNOD"}
 	var capsToDropString string
@@ -40,7 +39,7 @@ func generateJudgerYml(workPath string, data *entities.JudgePostData, languageIn
 		capsToDropString += fmt.Sprintf("--cap-drop %s ", ct)
 	}
 	args := fmt.Sprintf("--privileged --cpus 2 -m 100m %s --rm -v %s:/workspace", strings.TrimSpace(capsToDropString), workPath)
-	judgeCommand := fmt.Sprintf("podman --runtime /usr/bin/crun run %s %s", args, languageInfo.Version.Image)
+	judgeCommand := fmt.Sprintf("docker run %s %s", args, languageInfo.Version.Image)
 
 	fmt.Println(judgeCommand)
 
@@ -76,7 +75,7 @@ func writeTestData(item TestDataItem, w *sync.WaitGroup) {
 	w.Done()
 }
 
-func (s *service) Judge(requestid string, data *entities.JudgePostData, languageInfo *judger.JudgeInfo) (*JudgeResponse, error) {
+func (s *service) Judge(requestid string, data *judger.JudgePostData, languageInfo *judger.JudgeInfo) (*JudgeResponse, error) {
 	workPath := getWorkspacePath(data.Key, requestid)
 
 	codeErrChan := make(chan error)

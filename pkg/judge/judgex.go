@@ -15,19 +15,19 @@ import (
 	judger "github.com/Judgoo/Judger/entities"
 )
 
-func generatePodmanCmd(judgeInfo *judger.JudgeInfo) string {
+func generateCRunXCmd(judgeInfo *judger.JudgeInfo) string {
 	capsToDrop := [...]string{"MKNOD"}
 	var capsToDropString string
 	for _, ct := range capsToDrop {
 		capsToDropString += fmt.Sprintf("--cap-drop %s ", ct)
 	}
 	args := fmt.Sprintf("--rm --privileged -i %s", strings.TrimSpace(capsToDropString))
-	judgeCommand := fmt.Sprintf("podman --runtime /usr/bin/crun run %s %s -x", args, judgeInfo.Version.Image)
+	judgeCommand := fmt.Sprintf("docker run %s %s -x", args, judgeInfo.Version.Image)
 	return judgeCommand
 }
 
 func (s *service) JudgeX(requestid string, postData *judger.JudgePostData, judgeInfo *judger.JudgeInfo) (*JudgeResponse, error) {
-	cRunCmd := generatePodmanCmd(judgeInfo)
+	cRunCmd := generateCRunXCmd(judgeInfo)
 	fmt.Printf("cRunCmd %s", cRunCmd)
 	cd := &judger.JudgerConsumeData{
 		RequestId: requestid,

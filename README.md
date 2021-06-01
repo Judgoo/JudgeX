@@ -41,8 +41,29 @@ type LanguageType int
 
 ## 容器支持
 
-需要安装 podman。
-需要安装 crun 作为运行时。
+可以安装 crun 作为运行时。
+
+### 设置 Docker 默认运行时为 crun
+
+编辑 /etc/docker/daemon.jso：
+
+```json{
+{
+  "default-runtime": "crun",
+  "runtimes": {
+    "crun": {
+      "path": "/usr/local/crun"
+    }
+  }
+}
+```
+
+然后重启 docker。
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
 
 ## 注意事项
 
